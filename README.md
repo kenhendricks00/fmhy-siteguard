@@ -26,7 +26,7 @@
       <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/ext_icon_144.png"></td>
       <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/starred.png"></td>
       <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/safe.png"></td>
-      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/potentially-unsafe.png"></td>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/potentially_unsafe.png"></td>
       <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/unsafe.png"></td>
     </tr>
     <tr>
