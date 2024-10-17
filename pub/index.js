@@ -3,7 +3,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const statusIcon = document.getElementById("status-icon");
   const statusMessage = document.getElementById("status-message");
-  const errorMessage = document.getElementById("error-message");
+
+  // Helper function to normalize URLs (removes trailing slashes)
+  function normalizeUrl(url) {
+    return url.replace(/\/+$/, ""); // Remove trailing slash if exists
+  }
 
   // Query the active tab to get its URL
   browser.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -13,15 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    const currentUrl = tabs[0].url.trim();
-
-    // Check if the current tab URL contains "fmhy.net"
-    if (currentUrl.includes("fmhy.net")) {
-      console.log("On fmhy.net, marking as starred.");
-      statusIcon.src = "../res/icons/starred.png"; // Update icon to starred
-      statusMessage.textContent = `${currentUrl} is starred.`; // Update message
-      return; // Stop further execution since we already identified fmhy.net
-    }
+    const currentUrl = normalizeUrl(tabs[0].url.trim());
 
     console.log(
       "Sending message to background to check site status for:",
@@ -41,40 +37,34 @@ document.addEventListener("DOMContentLoaded", function () {
         // Update popup based on the received site status
         switch (response.status) {
           case "unsafe":
-            console.log("Popup: Site is unsafe:", currentUrl);
             statusIcon.src = "../res/icons/unsafe.png"; // Update icon to unsafe
-            statusMessage.textContent = `${currentUrl} is unsafe. Be cautious!`; // Update message
+            statusMessage.textContent = `${currentUrl} is unsafe. Be cautious!`;
             break;
 
           case "potentially_unsafe":
-            console.log("Popup: Site is potentially unsafe:", currentUrl);
             statusIcon.src = "../res/icons/potentially_unsafe.png"; // Update icon to potentially unsafe
-            statusMessage.textContent = `${currentUrl} is potentially unsafe. Be cautious!`; // Update message
+            statusMessage.textContent = `${currentUrl} is potentially unsafe. Be cautious!`;
             break;
 
           case "safe":
-            console.log("Popup: Site is safe:", currentUrl);
             statusIcon.src = "../res/icons/safe.png"; // Update icon to safe
-            statusMessage.textContent = `${currentUrl} is safe.`; // Update message
+            statusMessage.textContent = `${currentUrl} is safe.`;
             break;
 
           case "starred":
-            console.log("Popup: Site is starred:", currentUrl);
             statusIcon.src = "../res/icons/starred.png"; // Update icon to starred
-            statusMessage.textContent = `${currentUrl} is starred.`; // Update message
+            statusMessage.textContent = `${currentUrl} is starred.`;
             break;
 
           case "no_data":
-            console.log("Popup: No data for this site:", currentUrl);
             statusIcon.src = "../res/ext_icon_144.png"; // Default extension icon
             statusMessage.textContent =
-              "This page is not currently in the wiki."; // Update message
+              "This page is not currently in the wiki.";
             break;
 
           default:
-            console.error("Popup: Unexpected site status:", response.status);
-            statusIcon.src = "../res/ext_icon_144.png"; // Default extension icon for any unexpected status
-            statusMessage.textContent = "An unknown error occurred."; // Update message for unexpected errors
+            statusIcon.src = "../res/ext_icon_144.png"; // Default extension icon
+            statusMessage.textContent = "An unknown error occurred.";
         }
       }
     );
