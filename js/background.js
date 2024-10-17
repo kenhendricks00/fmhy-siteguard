@@ -1,36 +1,16 @@
-const filterListURL =
-  "https://raw.githubusercontent.com/fmhy/FMHYFilterlist/main/filterlist-domains.txt";
-
-const safeListURLs = [
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/adblockvpnguide.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/ai.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/android-iosguide.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/audiopiracyguide.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/devtools.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/downloadpiracyguide.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/edupiracyguide.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/file-tools.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/gaming-tools.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/gamingpiracyguide.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/img-tools.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/internet-tools.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/linuxguide.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/miscguide.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/non-english.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/nsfwpiracy.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/readingpiracyguide.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/social-media-tools.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/storage.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/system-tools.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/text-tools.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/torrentpiracyguide.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/video-tools.md",
-  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/videopiracyguide.md",
-];
+// Updated URLs for filter lists, safe sites, and starred sites
+const filterListURLUnsafe =
+  "https://raw.githubusercontent.com/fmhy/FMHYFilterlist/refs/heads/main/sitelist.txt";
+const filterListURLPotentiallyUnsafe =
+  "https://raw.githubusercontent.com/fmhy/FMHYFilterlist/refs/heads/main/sitelist-plus.txt";
+const safeListURL = "https://api.fmhy.net/single-page";
+const starredListURL =
+  "https://raw.githubusercontent.com/fmhy/bookmarks/refs/heads/main/fmhy_in_bookmarks_starred_only.html";
 
 let unsafeSites = [];
 let potentiallyUnsafeSites = [];
 let safeSites = [];
+let starredSites = ["https://fmhy.net"];
 
 // Helper function to extract URLs from markdown text
 function extractUrlsFromMarkdown(markdown) {
@@ -38,59 +18,100 @@ function extractUrlsFromMarkdown(markdown) {
   return markdown.match(urlRegex) || [];
 }
 
-// Fetch the filter list
-function fetchFilterList() {
-  console.log("Fetching filter list...");
+// Helper function to extract URLs from HTML bookmarks
+function extractUrlsFromBookmarks(html) {
+  const urlRegex = /<A HREF="(https?:\/\/[^\s"]+)"/g;
+  let matches;
+  const urls = [];
+  while ((matches = urlRegex.exec(html)) !== null) {
+    urls.push(matches[1]);
+  }
+  return urls;
+}
 
-  return fetch(filterListURL)
-    .then((response) => response.text())
-    .then((text) => {
-      console.log("Filter list fetched successfully!");
-      const lines = text.split("\n");
-      let isPotentiallyUnsafeSection = false;
+// Fetch the unsafe and potentially unsafe filter lists
+async function fetchFilterLists() {
+  console.log("Fetching filter lists...");
 
-      lines.forEach((line) => {
-        if (line.startsWith("#")) {
-          if (line.includes("not recommended/potentially unsafe")) {
-            isPotentiallyUnsafeSection = true;
-          }
-        } else if (line.trim()) {
-          const domain = line.trim();
-          if (isPotentiallyUnsafeSection) {
-            potentiallyUnsafeSites.push(domain);
-          } else {
-            unsafeSites.push(domain);
-          }
-        }
-      });
-      console.log("Parsed Unsafe Sites:", unsafeSites);
-      console.log("Parsed Potentially Unsafe Sites:", potentiallyUnsafeSites);
-    })
-    .catch((error) => console.error("Error fetching filter list:", error));
+  try {
+    const [unsafeResponse, potentiallyUnsafeResponse] = await Promise.all([
+      fetch(filterListURLUnsafe),
+      fetch(filterListURLPotentiallyUnsafe),
+    ]);
+
+    if (unsafeResponse.ok) {
+      const unsafeText = await unsafeResponse.text();
+      unsafeSites = unsafeText
+        .split("\n")
+        .filter((line) => line.trim() && !line.startsWith("#"));
+    }
+
+    if (potentiallyUnsafeResponse.ok) {
+      const potentiallyUnsafeText = await potentiallyUnsafeResponse.text();
+      potentiallyUnsafeSites = potentiallyUnsafeText
+        .split("\n")
+        .filter((line) => line.trim() && !line.startsWith("#"));
+    }
+
+    console.log("Parsed Unsafe Sites:", unsafeSites);
+    console.log("Parsed Potentially Unsafe Sites:", potentiallyUnsafeSites);
+  } catch (error) {
+    console.error("Error fetching filter lists:", error);
+  }
 }
 
 // Fetch the safe sites
 async function fetchSafeSites() {
   console.log("Fetching safe sites...");
-  for (let url of safeListURLs) {
-    try {
-      let response = await fetch(url);
-      if (response.ok) {
-        let markdown = await response.text();
-        let urls = extractUrlsFromMarkdown(markdown);
-        urls.forEach((siteUrl) => {
-          // Extract hostname for consistency in matching
-          let hostname = new URL(siteUrl.trim()).hostname.replace("www.", "");
-          if (!safeSites.includes(hostname)) {
-            safeSites.push(hostname);
-          }
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching safe site list:", error);
+  try {
+    const response = await fetch(safeListURL);
+    if (response.ok) {
+      const markdown = await response.text();
+      const urls = extractUrlsFromMarkdown(markdown);
+      urls.forEach((siteUrl) => {
+        let fullUrl = siteUrl.trim();
+        if (!safeSites.includes(fullUrl)) {
+          safeSites.push(fullUrl);
+        }
+      });
     }
+    console.log("Parsed Safe Sites:", safeSites);
+  } catch (error) {
+    console.error("Error fetching safe sites:", error);
   }
-  console.log("Parsed Safe Sites:", safeSites);
+}
+
+// Fetch the starred sites
+async function fetchStarredSites() {
+  console.log("Fetching starred sites...");
+  try {
+    const response = await fetch(starredListURL);
+    if (response.ok) {
+      const html = await response.text();
+      const urls = extractUrlsFromBookmarks(html);
+
+      // Ensure we retain previously added starred sites (like fmhy.net)
+      const predefinedStarredSites = ["https://fmhy.net"]; // Predefined starred sites
+
+      urls.forEach((siteUrl) => {
+        let fullUrl = siteUrl.trim();
+        if (!starredSites.includes(fullUrl)) {
+          starredSites.push(fullUrl);
+        }
+      });
+
+      // Ensure fmhy.net stays in the starred list after fetching
+      predefinedStarredSites.forEach((site) => {
+        if (!starredSites.includes(site)) {
+          starredSites.push(site); // Add fmhy.net if not present
+        }
+      });
+
+      console.log("Parsed Starred Sites:", starredSites);
+    }
+  } catch (error) {
+    console.error("Error fetching starred sites:", error);
+  }
 }
 
 // Update the toolbar icon based on the site's status
@@ -103,6 +124,8 @@ function updateIcon(status, tabId) {
     iconPath = "res/icons/unsafe.png";
   } else if (status === "potentially_unsafe") {
     iconPath = "res/icons/potentially_unsafe.png";
+  } else if (status === "starred") {
+    iconPath = "res/icons/starred.png";
   }
 
   browser.browserAction.setIcon({
@@ -115,18 +138,22 @@ function updateIcon(status, tabId) {
 function checkSiteAndUpdateIcon(tabId, url) {
   if (!url) return;
 
-  const currentUrl = new URL(url).hostname.replace("www.", "");
+  const currentUrl = url.trim();
   console.log("Checking site status for toolbar icon:", currentUrl);
 
-  // Check if the site is safe, unsafe, or potentially unsafe
+  // Check if the site is starred, safe, unsafe, or potentially unsafe
+  let isStarred = starredSites.some((site) => currentUrl.includes(site));
   let isSafe = safeSites.some((site) => currentUrl === site);
   let isUnsafe = unsafeSites.some((site) => currentUrl.includes(site));
   let isPotentiallyUnsafe = potentiallyUnsafeSites.some((site) =>
     currentUrl.includes(site)
   );
 
-  // Prioritize safe sites first
-  if (isSafe) {
+  // Prioritize starred sites first, then safe sites
+  if (isStarred) {
+    console.log("Updating toolbar icon to starred for:", currentUrl);
+    updateIcon("starred", tabId);
+  } else if (isSafe) {
     console.log("Updating toolbar icon to safe for:", currentUrl);
     updateIcon("safe", tabId);
   } else if (isUnsafe) {
@@ -144,16 +171,19 @@ function checkSiteAndUpdateIcon(tabId, url) {
 // Listen for messages from the popup
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "checkSiteStatus") {
-    const currentUrl = message.url;
+    const currentUrl = message.url.trim();
     console.log("Checking site status for popup:", currentUrl);
 
-    let isSafe = safeSites.some((site) => currentUrl.includes(site));
+    let isStarred = starredSites.some((site) => currentUrl === site);
+    let isSafe = safeSites.some((site) => currentUrl === site);
     let isUnsafe = unsafeSites.some((site) => currentUrl.includes(site));
     let isPotentiallyUnsafe = potentiallyUnsafeSites.some((site) =>
       currentUrl.includes(site)
     );
 
-    if (isSafe) {
+    if (isStarred) {
+      sendResponse({ status: "starred", url: currentUrl });
+    } else if (isSafe) {
       sendResponse({ status: "safe", url: currentUrl });
     } else if (isUnsafe) {
       sendResponse({ status: "unsafe", url: currentUrl });
@@ -170,8 +200,9 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Initialize the extension
 async function initializeExtension() {
   // Fetch all necessary lists
-  await fetchFilterList();
+  await fetchFilterLists();
   await fetchSafeSites();
+  await fetchStarredSites();
 
   // Listen for tab updates after lists are fetched
   browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
