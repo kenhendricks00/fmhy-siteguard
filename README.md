@@ -52,7 +52,7 @@
 
 # 🔒 Why Choose FMHY SafeGuard?
 
-- **Up-to-date Protection**: Always uses the latest FMHY filterlists to block unsafe or malicious websites.
+- **Up-to-date Protection**: Always uses the latest FMHY filterlist to block unsafe or malicious websites.
 - **Clean User Interface**: Simple, non-intrusive design to help you stay informed without cluttering your browsing experience.
 - **Free and Open Source**: Available on GitHub, fully customizable and open to community contributions.
 
