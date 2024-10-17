@@ -1,0 +1,26 @@
+{
+    "manifest_version": 2,
+    "name": "FMHY SafeGuard",
+    "version": "1.0.0",
+    "icons": {
+        "128": "res/ext_icon_144.png"
+    },
+    "browser_action": {
+        "default_icon": {
+            "128": "res/ext_icon_144.png"
+        },
+        "default_popup": "pub/index.html"
+    },
+    "permissions": [
+        "activeTab",
+        "<all_urls>",
+        "webRequest",
+        "webRequestBlocking",
+        "storage",
+        "notifications"
+    ],
+    "background": {
+        "scripts": ["js/background.js"],
+        "persistent": true
+    }
+}

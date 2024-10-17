@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FMHY SafeGuard</title>
+    <style>
+        body {
+            text-align: center;
+            padding-bottom: 10px;
+            color: #848a94;
+            background-color: rgb(26, 26, 26);
+            font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+        }
+
+        a {
+            color: #E8E8E8;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #D04343;
+        }
+
+        .title h1 {
+            font-size: 36px;
+            background: -webkit-linear-gradient(120deg, #c4b5fd 30%, #7bc5e4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+			margin-left: 25px;
+			margin-right: 25px;
+        }
+
+        #status-container {
+            margin-top: 20px;
+        }
+
+        .status-image {
+            width: 100px;
+            height: 100px;
+        }
+
+        #status-message {
+            font-size: 18px;
+            margin-top: 10px;
+            color: #E8E8E8;
+        }
+
+        #error-message {
+            color: red;
+        }
+		
+		#footer {
+            font-size: 12px;
+            margin-top: 20px;
+            color: #848a94;
+        }
+
+        #footer a {
+            color: #78b3e2;
+            text-decoration: none;
+        }
+
+        #footer a:hover {
+            color: #78b3e2;
+			text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">
+        <h1>FMHY SafeGuard</h1>
+    </div>
+
+    <div id="status-container">
+        <!-- The status icon will be dynamically updated by the JS -->
+        <img id="status-icon" class="status-image" src="safe.png" alt="Status Icon">
+        <!-- The status message will also be updated -->
+        <p id="status-message">Checking site status...</p>
+    </div>
+
+    <!-- An area for error messages, if necessary -->
+    <p id="error-message"></p>
+	
+	<div id="footer">
+        <p>Created using <a href="https://github.com/fmhy/FMHYFilterlist" target="_blank">FMHY Filterlists</a></p>
+    </div>
+
+    <script src="index.js"></script>
+</body>
+</html>
