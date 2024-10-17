@@ -14,24 +14,38 @@
 
 # 🛡️ What is FMHY SafeGuard?
 
-**FMHY SafeGuard** is a browser extension that keeps you safe by checking websites against the latest filterlists from [FMHY Filterlists](https://github.com/fmhy/FMHYFilterlist). The extension categorizes websites as safe, unsafe, or potentially dangerous, giving you peace of mind while browsing.
+**FMHY SafeGuard** is a browser extension that keeps you safe by checking websites against the latest filterlists from [FMHY Filterlists](https://github.com/fmhy/FMHYFilterlist). The extension categorizes websites as starred, safe, unsafe, or potentially dangerous, giving you peace of mind while browsing.
 
 <p align="center">
-<img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/header-1.png" style="width: 300px">
-<img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/header-2.png" style="width: 300px">
-<img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/header-3.png" style="width: 300px">
-<img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/header-4.png" style="width: 300px">
+  <img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/header-1.png" style="width: 300px">
 </p>
 
+<div align="center">
+  <table>
+    <tr>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/ext_icon_144.png"></td>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/starred.png"></td>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/safe.png"></td>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/unsafe.png"></td>
+    </tr>
+    <tr>
+      <td>Default/Not in Wiki</td>
+      <td>Starred</td>
+      <td>Safe</td>
+      <td>Unsafe</td>
+    </tr>
+  </table>
+</div>
+
 # 🌟 Key Features
-- **Real-time Site Status**: Instant feedback on whether a site is safe, unsafe, or potentially unsafe, with visual toolbar icons.
+- **Real-time Site Status**: Instant feedback on whether a site is starred, safe, unsafe, or potentially unsafe, with visual toolbar icons.
 - **Updated Filterlists**: Utilizes the frequently updated FMHY filterlists to ensure protection from the latest unsafe domains.
 - **Pop-up Alerts**: Get easy-to-read pop-ups that inform you about the site status and allow further action.
 
 # 📋 Usage Instructions
 
 1. **Install the Extension**: Install FMHY SafeGuard from the [Releases Page](https://github.com/kenhendricks00/FMHY-SafeGuard/releases).
-2. **Browse Securely**: Visit any website and the toolbar icon will automatically update to reflect the site’s safety status (Safe, Unsafe, Potentially Unsafe).
+2. **Browse Securely**: Visit any website and the toolbar icon will automatically update to reflect the site’s safety status (Starred, Safe, Unsafe, Potentially Unsafe).
 3. **View More Info**: Click the extension icon to open a popup with detailed site status information, including a link to contribute or report unknown sites.
 
 # 🔒 Why Choose FMHY SafeGuard?
