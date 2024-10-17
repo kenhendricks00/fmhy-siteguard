@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/kenhendricks00/FMHY-SafeGuard/releases"><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/banner.png" /></a>
+  <a href="https://github.com/kenhendricks00/FMHY-SafeGuard/releases"><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/banner.png" /></a>
 </p>
 <div align="center">
   <a href="https://discord.com/invite/Stz6y6NgNg">
@@ -20,6 +20,7 @@
 <img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/header-1.png" style="width: 300px">
 <img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/header-2.png" style="width: 300px">
 <img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/header-3.png" style="width: 300px">
+<img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/header-4.png" style="width: 300px">
 </p>
 
 # 🌟 Key Features
