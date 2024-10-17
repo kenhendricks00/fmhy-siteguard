@@ -26,12 +26,14 @@
       <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/ext_icon_144.png"></td>
       <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/starred.png"></td>
       <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/safe.png"></td>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/potentially-unsafe.png"></td>
       <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/unsafe.png"></td>
     </tr>
     <tr>
       <td>Default/Not in Wiki</td>
       <td>Starred</td>
       <td>Safe</td>
+      <td>Potentially Unsafe</td>
       <td>Unsafe</td>
     </tr>
   </table>
