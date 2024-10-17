@@ -3,7 +3,7 @@
 </p>
 <div align="center">
   <a href="https://discord.com/invite/Stz6y6NgNg">
-    <img src="https://img.shields.io/static/v1?label=Join&message=FMHY&color=blue" alt="Invite Link">
+    <img src="https://img.shields.io/static/v1?label=Join&message=FMHY&color=c4b5fd" alt="Invite Link">
   </a>
   <a href="https://github.com/kenhendricks00/FMHY-SafeGuard/commits/main/">
     <img src="https://img.shields.io/github/last-commit/kenhendricks00/FMHY-SafeGuard?label=Last%20Commit&color=green" alt="Last Commit">
@@ -11,3 +11,6 @@
 </div>
 <br>
 <h2> <div align="center"><b> An extension that detects unsafe/potentially unsafe sites using the FMHY Filterlist. </b></div> </h2>
+
+# 📜 Credits
+- [FMHY Filterlists](https://github.com/fmhy/FMHYFilterlist), the service used to detect unsafe/potentially unsafe sites, created by FMHY
