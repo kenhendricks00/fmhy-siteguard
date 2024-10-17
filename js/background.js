@@ -1,4 +1,3 @@
-// Updated URLs for filter lists, safe sites, and starred sites
 const filterListURLUnsafe =
   "https://raw.githubusercontent.com/fmhy/FMHYFilterlist/refs/heads/main/sitelist.txt";
 const filterListURLPotentiallyUnsafe =
@@ -27,6 +26,11 @@ function extractUrlsFromBookmarks(html) {
     urls.push(matches[1]);
   }
   return urls;
+}
+
+// Helper function to normalize URLs (removes trailing slashes and "www.")
+function normalizeUrl(url) {
+  return url.replace(/\/+$/, "").replace(/^https?:\/\/www\./, "https://"); // Remove trailing slash if exists and "www." if present
 }
 
 // Fetch the unsafe and potentially unsafe filter lists
@@ -69,7 +73,7 @@ async function fetchSafeSites() {
       const markdown = await response.text();
       const urls = extractUrlsFromMarkdown(markdown);
       urls.forEach((siteUrl) => {
-        let fullUrl = siteUrl.trim();
+        let fullUrl = normalizeUrl(siteUrl.trim());
         if (!safeSites.includes(fullUrl)) {
           safeSites.push(fullUrl);
         }
@@ -90,22 +94,13 @@ async function fetchStarredSites() {
       const html = await response.text();
       const urls = extractUrlsFromBookmarks(html);
 
-      // Ensure we retain previously added starred sites (like fmhy.net)
-      const predefinedStarredSites = ["https://fmhy.net"]; // Predefined starred sites
+      // Normalize and add URLs to the starredSites array
+      starredSites = [...new Set(urls.map(normalizeUrl))];
 
-      urls.forEach((siteUrl) => {
-        let fullUrl = siteUrl.trim();
-        if (!starredSites.includes(fullUrl)) {
-          starredSites.push(fullUrl);
-        }
-      });
-
-      // Ensure fmhy.net stays in the starred list after fetching
-      predefinedStarredSites.forEach((site) => {
-        if (!starredSites.includes(site)) {
-          starredSites.push(site); // Add fmhy.net if not present
-        }
-      });
+      // Ensure fmhy.net, librechat.ai, and other important sites are always in the starred list
+      if (!starredSites.includes("https://fmhy.net")) {
+        starredSites.push("https://fmhy.net");
+      }
 
       console.log("Parsed Starred Sites:", starredSites);
     }
@@ -138,15 +133,24 @@ function updateIcon(status, tabId) {
 function checkSiteAndUpdateIcon(tabId, url) {
   if (!url) return;
 
-  const currentUrl = url.trim();
-  console.log("Checking site status for toolbar icon:", currentUrl);
+  const currentUrl = normalizeUrl(url.trim());
+  console.log(
+    "Checking site status for toolbar icon:",
+    currentUrl,
+    "TabId:",
+    tabId
+  );
 
   // Check if the site is starred, safe, unsafe, or potentially unsafe
-  let isStarred = starredSites.some((site) => currentUrl.includes(site));
-  let isSafe = safeSites.some((site) => currentUrl === site);
-  let isUnsafe = unsafeSites.some((site) => currentUrl.includes(site));
+  let isStarred = starredSites.some(
+    (site) => normalizeUrl(site) === currentUrl
+  );
+  let isSafe = safeSites.some((site) => normalizeUrl(site) === currentUrl);
+  let isUnsafe = unsafeSites.some((site) =>
+    currentUrl.includes(normalizeUrl(site))
+  );
   let isPotentiallyUnsafe = potentiallyUnsafeSites.some((site) =>
-    currentUrl.includes(site)
+    currentUrl.includes(normalizeUrl(site))
   );
 
   // Prioritize starred sites first, then safe sites
@@ -170,15 +174,18 @@ function checkSiteAndUpdateIcon(tabId, url) {
 
 // Listen for messages from the popup
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log("Received message in background for site:", message.url);
   if (message.action === "checkSiteStatus") {
-    const currentUrl = message.url.trim();
-    console.log("Checking site status for popup:", currentUrl);
-
-    let isStarred = starredSites.some((site) => currentUrl === site);
-    let isSafe = safeSites.some((site) => currentUrl === site);
-    let isUnsafe = unsafeSites.some((site) => currentUrl.includes(site));
+    const currentUrl = normalizeUrl(message.url.trim());
+    let isStarred = starredSites.some(
+      (site) => normalizeUrl(site) === currentUrl
+    );
+    let isSafe = safeSites.some((site) => normalizeUrl(site) === currentUrl);
+    let isUnsafe = unsafeSites.some((site) =>
+      currentUrl.includes(normalizeUrl(site))
+    );
     let isPotentiallyUnsafe = potentiallyUnsafeSites.some((site) =>
-      currentUrl.includes(site)
+      currentUrl.includes(normalizeUrl(site))
     );
 
     if (isStarred) {
@@ -190,7 +197,6 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     } else if (isPotentiallyUnsafe) {
       sendResponse({ status: "potentially_unsafe", url: currentUrl });
     } else {
-      console.log("No data for this site:", currentUrl);
       sendResponse({ status: "no_data", url: currentUrl });
     }
   }
