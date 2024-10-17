@@ -67,7 +67,8 @@ document.addEventListener("DOMContentLoaded", function () {
           case "no_data":
             console.log("Popup: No data for this site:", currentUrl);
             statusIcon.src = "../res/ext_icon_144.png"; // Default extension icon
-            statusMessage.textContent = "There is no data for this site yet."; // Update message
+            statusMessage.textContent =
+              "This page is not currently in the wiki."; // Update message
             break;
 
           default:
