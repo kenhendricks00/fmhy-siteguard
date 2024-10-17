@@ -16,6 +16,12 @@
 
 **FMHY SafeGuard** is a browser extension that keeps you safe by checking websites against the latest filterlists from [FMHY Filterlists](https://github.com/fmhy/FMHYFilterlist). The extension categorizes websites as safe, unsafe, or potentially dangerous, giving you peace of mind while browsing.
 
+<p align="center">
+<img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/header-1.png" style="width: 300px">
+<img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/header-2.png" style="width: 300px">
+<img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/header-3.png" style="width: 300px">
+</p>
+
 # 🌟 Key Features
 - **Real-time Site Status**: Instant feedback on whether a site is safe, unsafe, or potentially unsafe, with visual toolbar icons.
 - **Updated Filterlists**: Utilizes the frequently updated FMHY filterlists to ensure protection from the latest unsafe domains.
