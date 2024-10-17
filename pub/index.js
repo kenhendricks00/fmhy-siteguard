@@ -34,6 +34,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Update popup for potentially unsafe site
                 statusIcon.src = '../res/icons/potentially_unsafe.png';  // Update icon to potentially unsafe
                 statusMessage.textContent = `${currentUrl} is potentially unsafe. Be cautious!`;  // Update message
+            } else if (response.status === "safe") {
+                console.log("Popup: Site is safe:", currentUrl);
+                // Update popup for safe site
+                statusIcon.src = '../res/icons/safe.png';  // Update icon to safe
+                statusMessage.textContent = `${currentUrl} is safe.`;  // Update message
             } else if (response.status === "no_data") {
                 console.log("Popup: No data for this site:", currentUrl);
                 // Update popup for no data
