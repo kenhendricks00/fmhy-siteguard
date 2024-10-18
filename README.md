@@ -54,9 +54,9 @@
 
 # 📋 Usage Instructions
 
-1. **Install the Extension**: Install FMHY SafeGuard from the [Releases Page](https://github.com/kenhendricks00/FMHY-SafeGuard/releases).
+1. **Install the Extension**: Install FMHY SafeGuard from the [Releases Page](https://github.com/kenhendricks00/FMHY-SafeGuard/releases) or the [Firefox page](https://addons.mozilla.org/en-US/firefox/addon/fmhy-safeguard/).
 2. **Browse Securely**: Visit any website and the toolbar icon will automatically update to reflect the site’s safety status (Starred, Safe, Unsafe, Potentially Unsafe).
-3. **View More Info**: Click the extension icon to open a popup with detailed site status information, including a link to contribute or report unknown sites.
+3. **View More Info**: Click the extension icon to open a popup with detailed site status information, including a link to contribute or report unknown sites (Coming soon!).
 
 # 🔒 Why Choose FMHY SafeGuard?
 
