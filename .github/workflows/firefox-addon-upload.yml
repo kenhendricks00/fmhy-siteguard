@@ -1,0 +1,39 @@
+name: Build and Upload Firefox Extension
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Zip Firefox extension
+      run: |
+        zip -r firefox-extension.zip \
+          assets/* \
+          js/* \
+          pub/* \
+          res/* \
+          LICENSE \
+          README.md \
+          manifest.json
+
+    - name: Upload to AMO using JWT Action
+      uses: Ovea/amo-upload@v2
+      with:
+        api_key: ${{ secrets.AMO_API_KEY }}
+        api_secret: ${{ secrets.AMO_API_SECRET }}
+        addon_zip: firefox-extension.zip
+        addon_id: "fmhy-safeguard"
+
+    - name: Notify about successful release
+      run: echo "Firefox extension uploaded successfully!"
