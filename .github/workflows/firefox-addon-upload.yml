@@ -16,6 +16,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Install web-ext
+      run: npm install --global web-ext
+
     - name: Zip Firefox extension
       run: |
         zip -r firefox-extension.zip \
@@ -27,13 +30,15 @@ jobs:
           README.md \
           manifest.json
 
-    - name: Upload to AMO using JWT Action
-      uses: Ovea/amo-upload@v2
-      with:
-        api_key: ${{ secrets.AMO_API_KEY }}
-        api_secret: ${{ secrets.AMO_API_SECRET }}
-        addon_zip: firefox-extension.zip
-        addon_id: "fmhy-safeguard"
+    - name: Sign and Upload extension to AMO
+      run: |
+        web-ext sign --source-dir . \
+          --api-key ${{ secrets.AMO_API_KEY }} \
+          --api-secret ${{ secrets.AMO_API_SECRET }} \
+          --id "fmhy-safeguard"
+      env:
+        AMO_API_KEY: ${{ secrets.AMO_API_KEY }}
+        AMO_API_SECRET: ${{ secrets.AMO_API_SECRET }}
 
     - name: Notify about successful release
       run: echo "Firefox extension uploaded successfully!"
