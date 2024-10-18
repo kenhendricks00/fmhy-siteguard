@@ -1,45 +1,64 @@
-name: Build and Upload Firefox Extension
+name: Firefox Extension Release
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  create:
+    tags: # Only trigger when a tag is created
+      - '*'
+
+permissions:
+  contents: read
 
 jobs:
   build:
+    permissions:
+      contents: write # Required for creating a release
+    name: Build and Upload Firefox Extension
     runs-on: ubuntu-latest
-
+    if: startsWith(github.ref, 'refs/tags/')
+    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
 
-    - name: Install web-ext
-      run: npm install --global web-ext
+      - name: Get release information
+        id: release_info
+        run: |
+          echo "::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}"
 
-    - name: Zip Firefox extension
-      run: |
-        zip -r firefox-extension.zip \
-          assets/* \
-          js/* \
-          pub/* \
-          res/* \
-          LICENSE \
-          README.md \
-          manifest.json
+      - name: Install web-ext
+        run: npm install --global web-ext
 
-    - name: Sign and Upload extension to AMO
-      run: |
-        web-ext sign --source-dir . \
-          --api-key ${{ secrets.AMO_API_KEY }} \
-          --api-secret ${{ secrets.AMO_API_SECRET }} \
-          --channel unlisted \
-          --no-input
-      env:
-        AMO_API_KEY: ${{ secrets.AMO_API_KEY }}
-        AMO_API_SECRET: ${{ secrets.AMO_API_SECRET }}
+      - name: Build and Sign Firefox Extension
+        run: |
+          web-ext sign --source-dir . \
+            --api-key ${{ secrets.AMO_API_KEY }} \
+            --api-secret ${{ secrets.AMO_API_SECRET }} \
+            --channel unlisted \
+            --no-input
+        env:
+          AMO_API_KEY: ${{ secrets.AMO_API_KEY }}
+          AMO_API_SECRET: ${{ secrets.AMO_API_SECRET }}
 
-    - name: Notify about successful release
-      run: echo "Firefox extension uploaded successfully!"
+      - name: Create GitHub release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.release_info.outputs.VERSION }}
+          release_name: "Firefox Extension v${{ steps.release_info.outputs.VERSION }}"
+          draft: false
+          prerelease: false
+          body: "Release version ${{ steps.release_info.outputs.VERSION }} of the Firefox extension."
+
+      - name: Upload Firefox package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: web-ext-artifacts/your-extension.xpi
+          asset_name: your-extension-${{ steps.release_info.outputs.VERSION }}.xpi
+          asset_content_type: application/x-xpinstall
