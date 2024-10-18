@@ -5,8 +5,9 @@
   <a href="https://discord.com/invite/Stz6y6NgNg">
     <img src="https://img.shields.io/static/v1?label=Join&message=FMHY&color=c4b5fd" alt="Invite Link"></a>
   <a href="https://github.com/kenhendricks00/FMHY-SafeGuard/commits/main/">
-    <img src="https://img.shields.io/github/last-commit/kenhendricks00/FMHY-SafeGuard?label=Last%20Commit&color=green" alt="Last Commit">
-  </a>
+    <img src="https://img.shields.io/github/last-commit/kenhendricks00/FMHY-SafeGuard?label=Last%20Commit&color=green" alt="Last Commit"></a>
+  <a href="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/kenhendricks00/FMHY-SafeGuard" alt="GitHub License"></a>
 </div>
 <br>
 <h2> <div align="center"><b> Protect Your Browsing with FMHY SafeGuard: Easy Filterlist Integration. </b></div> </h2>
@@ -37,6 +38,14 @@
     </tr>
   </table>
 </div>
+
+***
+
+<p align="center">
+  <a href="https://addons.mozilla.org/en-US/firefox/addon/fmhy-safeguard/"><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/firefox_addon_image.png" alt="Get FMHY SafeGuard for Firefox"></a>
+</p>
+
+***
 
 # 🌟 Key Features
 - **Real-time Site Status**: Instant feedback on whether a site is starred, safe, unsafe, or potentially unsafe, with visual toolbar icons.
