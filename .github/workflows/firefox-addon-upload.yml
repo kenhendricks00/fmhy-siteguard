@@ -35,7 +35,8 @@ jobs:
         web-ext sign --source-dir . \
           --api-key ${{ secrets.AMO_API_KEY }} \
           --api-secret ${{ secrets.AMO_API_SECRET }} \
-          --id "fmhy-safeguard"
+          --channel unlisted \
+          --no-input
       env:
         AMO_API_KEY: ${{ secrets.AMO_API_KEY }}
         AMO_API_SECRET: ${{ secrets.AMO_API_SECRET }}
