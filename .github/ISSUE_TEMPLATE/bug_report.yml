@@ -1,0 +1,52 @@
+name: Bug Report
+description: Create a report to help us improve. Write in English, please.
+title: "[BUG] Write a title for your bug"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for creating a bug report to help us improve!
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: bug-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior. For example, "1. Go to '...', 2. Click on '...', 3. See error"
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: false
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional information and data
+      description: |
+        If applicable, just state any other information you'd like us to know.
+    validations:
+      required: false
+  - type: input
+    id: fmhy-safeguard-version
+    attributes:
+      label: FMHY SafeGuard Version
+      description: Please provide the version of FixEmbed you are using, if current, just leave blank.
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Before opening this Issue
+      options:
+        - label: I have searched the issues of this repository and believe that this is not a duplicate.
+          required: true
