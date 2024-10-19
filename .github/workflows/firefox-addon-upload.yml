@@ -25,7 +25,7 @@ jobs:
       - name: Get release information
         id: release_info
         run: |
-          echo "::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}"
+          echo "::set-output name=VERSION::${GITHUB_REF/refs/tags/}"
 
       - name: Install web-ext
         run: npm install --global web-ext
@@ -33,6 +33,7 @@ jobs:
       - name: Build and Sign Firefox Extension
         run: |
           web-ext sign --source-dir . \
+            --artifacts-dir web-ext-artifacts \
             --api-key ${{ secrets.AMO_API_KEY }} \
             --api-secret ${{ secrets.AMO_API_SECRET }} \
             --channel unlisted \
@@ -53,12 +54,12 @@ jobs:
           prerelease: false
           body: "Release version ${{ steps.release_info.outputs.VERSION }} of the Firefox extension."
 
-      - name: Upload Firefox package
+      - name: Upload Firefox package to GitHub Release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: web-ext-artifacts/your-extension.xpi
+          asset_path: web-ext-artifacts/*.xpi # Use the signed extension from the artifacts
           asset_name: your-extension-${{ steps.release_info.outputs.VERSION }}.xpi
           asset_content_type: application/x-xpinstall
