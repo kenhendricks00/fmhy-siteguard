@@ -74,6 +74,21 @@
             text-decoration: underline;
         }
 
+        #feedback {
+            font-size: 12px;
+            margin-top: 10px;
+            color: #848a94;
+        }
+
+        #feedback a {
+            color: #78b3e2;
+            text-decoration: none;
+        }
+
+        #feedback a:hover {
+            text-decoration: underline;
+        }
+
         /* Animation for status change */
         .status-image.active {
             transform: scale(1.1);
@@ -94,6 +109,11 @@
 
     <!-- An area for error messages, if necessary -->
     <p id="error-message"></p>
+
+    <!-- Feedback link for users to report mistakes -->
+    <div id="feedback">
+        <p>Think this is a mistake? <a href="https://github.com/fmhy/FMHYFilterlist/issues" target="_blank">Let us know</a>.</p>
+    </div>
 
     <div id="footer">
         <p>Powered by <a href="https://github.com/fmhy/FMHYFilterlist" target="_blank">FMHY Filterlist</a></p>
