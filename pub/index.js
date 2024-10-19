@@ -1,72 +1,90 @@
-document.addEventListener("DOMContentLoaded", function () {
-  console.log("Popup loaded, attempting to get site status...");
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("Popup loaded, preparing to check site status...");
 
   const statusIcon = document.getElementById("status-icon");
   const statusMessage = document.getElementById("status-message");
+  const errorMessage = document.getElementById("error-message");
 
   // Helper function to normalize URLs (removes trailing slashes)
-  function normalizeUrl(url) {
-    return url.replace(/\/+$/, ""); // Remove trailing slash if exists
-  }
+  const normalizeUrl = (url) => url.replace(/\/+$/, "").trim();
 
-  // Query the active tab to get its URL
-  browser.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    if (tabs.length === 0) {
-      console.error("No active tab found.");
-      statusMessage.textContent = "Error: No active tab found.";
-      return;
+  try {
+    // Get the active tab's URL
+    const [activeTab] = await browser.tabs.query({ active: true, currentWindow: true });
+
+    if (!activeTab || !activeTab.url) {
+      throw new Error("No active tab found or URL is unavailable.");
     }
 
-    const currentUrl = normalizeUrl(tabs[0].url.trim());
-
-    console.log(
-      "Sending message to background to check site status for:",
-      currentUrl
-    );
+    const currentUrl = normalizeUrl(activeTab.url);
+    console.log(`Active tab URL: ${currentUrl}`);
 
     // Send a message to the background script to check the site's status
-    browser.runtime.sendMessage(
-      { action: "checkSiteStatus", url: currentUrl },
-      function (response) {
-        if (!response) {
-          console.error("No response from background script.");
-          statusMessage.textContent = "Error: Could not retrieve site status.";
-          return;
-        }
+    const response = await browser.runtime.sendMessage({ action: "checkSiteStatus", url: currentUrl });
 
-        // Update popup based on the received site status
-        switch (response.status) {
-          case "unsafe":
-            statusIcon.src = "../res/icons/unsafe.png"; // Update icon to unsafe
-            statusMessage.textContent = `${currentUrl} is unsafe. Be cautious!`;
-            break;
+    if (!response || !response.status) {
+      throw new Error("Failed to retrieve site status from the background script.");
+    }
 
-          case "potentially_unsafe":
-            statusIcon.src = "../res/icons/potentially_unsafe.png"; // Update icon to potentially unsafe
-            statusMessage.textContent = `${currentUrl} is potentially unsafe. Be cautious!`;
-            break;
+    // Handle different site statuses and update the UI accordingly
+    handleStatusUpdate(response.status, currentUrl);
+  } catch (error) {
+    console.error("Error while checking site status:", error);
+    errorMessage.textContent = `Error: ${error.message}`;
+    updateUI("error", "An error occurred while retrieving the site status.");
+  }
 
-          case "safe":
-            statusIcon.src = "../res/icons/safe.png"; // Update icon to safe
-            statusMessage.textContent = `${currentUrl} is safe.`;
-            break;
+  /**
+   * Updates the UI based on the site status
+   * @param {string} status - The status of the site (e.g., "safe", "unsafe")
+   * @param {string} url - The URL of the current tab
+   */
+  function handleStatusUpdate(status, url) {
+    switch (status) {
+      case "unsafe":
+        updateUI("unsafe", `${url} is flagged as <strong>unsafe</strong>. Be cautious when interacting with this site.`);
+        break;
+      case "potentially_unsafe":
+        updateUI("potentially_unsafe", `${url} is <strong>potentially unsafe</strong>. Proceed with caution.`);
+        break;
+      case "safe":
+        updateUI("safe", `${url} is <strong>safe</strong> to browse.`);
+        break;
+      case "starred":
+        updateUI("starred", `${url} is a <strong>starred</strong> site.`);
+        break;
+      case "no_data":
+        updateUI("no_data", `No data available for <strong>${url}</strong>.`);
+        break;
+      default:
+        updateUI("unknown", `An unknown status was received for <strong>${url}</strong>.`);
+    }
+  }
 
-          case "starred":
-            statusIcon.src = "../res/icons/starred.png"; // Update icon to starred
-            statusMessage.textContent = `${currentUrl} is starred.`;
-            break;
+  /**
+   * Updates the UI with the appropriate icon, message, and effects.
+   * @param {string} status - The status of the site (e.g., "safe", "unsafe").
+   * @param {string} message - The message to display to the user.
+   */
+  function updateUI(status, message) {
+    const icons = {
+      unsafe: "../res/icons/unsafe.png",
+      potentially_unsafe: "../res/icons/potentially_unsafe.png",
+      safe: "../res/icons/safe.png",
+      starred: "../res/icons/starred.png",
+      no_data: "../res/ext_icon_144.png",
+      error: "../res/icons/error.png",
+      unknown: "../res/ext_icon_144.png"
+    };
 
-          case "no_data":
-            statusIcon.src = "../res/ext_icon_144.png"; // Default extension icon
-            statusMessage.textContent =
-              "This page is not currently in the wiki.";
-            break;
+    // Update the icon and message
+    statusIcon.src = icons[status] || icons["unknown"];
+    statusMessage.innerHTML = message || "An unknown error occurred.";
+    
+    // Add a small animation when the status changes
+    statusIcon.classList.add("active");
+    setTimeout(() => statusIcon.classList.remove("active"), 300);
 
-          default:
-            statusIcon.src = "../res/ext_icon_144.png"; // Default extension icon
-            statusMessage.textContent = "An unknown error occurred.";
-        }
-      }
-    );
-  });
+    console.log(`UI updated: ${message}`);
+  }
 });
