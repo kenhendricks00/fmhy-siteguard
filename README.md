@@ -24,10 +24,10 @@
   <table>
     <tr>
       <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/ext_icon_144.png"></td>
-      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/starred.png"></td>
-      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/safe.png"></td>
-      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/potentially_unsafe.png"></td>
-      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/unsafe.png"></td>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/starred.png" style="width: 144px"></td>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/safe.png" style="width: 144px"></td>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/potentially_unsafe.png" style="width: 144px"></td>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/unsafe.png" style="width: 144px"></td>
     </tr>
     <tr>
       <td>Default/Not in Wiki</td>
