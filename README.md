@@ -23,11 +23,11 @@
 <div align="center">
   <table>
     <tr>
-      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/ext_icon_144.png"></td>
-      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/starred.png" style="width: 144px"></td>
-      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/safe.png" style="width: 144px"></td>
-      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/potentially_unsafe.png" style="width: 144px"></td>
-      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/res/icons/unsafe.png" style="width: 144px"></td>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/icons/default.png"></td>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/icons/starred.png" style="width: 144px"></td>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/icons/safe.png" style="width: 144px"></td>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/icons/potentially_unsafe.png" style="width: 144px"></td>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/icons/unsafe.png" style="width: 144px"></td>
     </tr>
     <tr>
       <td>Default/Not in Wiki</td>
@@ -43,7 +43,12 @@
 
 <p align="center">
   <a href="https://addons.mozilla.org/en-US/firefox/addon/fmhy-safeguard/"><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/firefox_addon_image.png" alt="Get FMHY SafeGuard for Firefox"></a>
+  <a href=""><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/chrome_addon_image.png" alt="Get FMHY SafeGuard for Chrome"></a>
+<div align="center">
+<h2> <b> NOTE: The Chromium version of FMHY SafeGuard is now available! </b> </h2>
+<p> <b> However, the extension is currently undergoing review for the Chrome Web Store. </b> </p>
 </p>
+</div>
 
 ***
 
@@ -54,7 +59,7 @@
 
 # 📋 Usage Instructions
 
-1. **Install the Extension**: Install FMHY SafeGuard from the [Releases Page](https://github.com/kenhendricks00/FMHY-SafeGuard/releases) or the [Firefox page](https://addons.mozilla.org/en-US/firefox/addon/fmhy-safeguard/).
+1. **Install the Extension**: Install FMHY SafeGuard from the [Releases Page](https://github.com/kenhendricks00/FMHY-SafeGuard/releases) or the [Firefox page](https://addons.mozilla.org/en-US/firefox/addon/fmhy-safeguard/)/[Chrome Page]().
 2. **Browse Securely**: Visit any website and the toolbar icon will automatically update to reflect the site’s safety status (Starred, Safe, Unsafe, Potentially Unsafe).
 3. **View More Info**: Click the extension icon to open a popup with detailed site status information, including a link to contribute or report unknown sites (Coming soon!).
 
@@ -67,7 +72,7 @@
 # 🚀 Get Started
 
 To start using FMHY SafeGuard, follow these steps:
-1. Download the extension from the [Releases page](https://github.com/kenhendricks00/FMHY-SafeGuard/releases) or the [Firefox page](https://addons.mozilla.org/en-US/firefox/addon/fmhy-safeguard/).
+1. Download the extension from the [Releases page](https://github.com/kenhendricks00/FMHY-SafeGuard/releases) or the [Firefox page](https://addons.mozilla.org/en-US/firefox/addon/fmhy-safeguard/)/[Chrome Page]().
 2. Install it into your browser and start browsing securely.
 3. Customize the settings to your preferences via the extension’s pop-up (Coming soon!).
 
