@@ -97,7 +97,7 @@ async function fetchStarredSites() {
       // Normalize and add URLs to the starredSites array
       starredSites = [...new Set(urls.map(normalizeUrl))];
 
-      // Ensure fmhy.net, librechat.ai, and other important sites are always in the starred list
+      // Ensure fmhy.net is always in the starred list
       if (!starredSites.includes("https://fmhy.net")) {
         starredSites.push("https://fmhy.net");
       }
@@ -109,8 +109,8 @@ async function fetchStarredSites() {
   }
 }
 
-// Update the toolbar icon based on the site's status
-function updateIcon(status, tabId) {
+// Update the Address Bar icon based on the site's status
+function updatePageAction(status, tabId) {
   let iconPath = "res/ext_icon_144.png"; // Default extension icon
 
   if (status === "safe") {
@@ -123,19 +123,23 @@ function updateIcon(status, tabId) {
     iconPath = "res/icons/starred.png";
   }
 
-  browser.browserAction.setIcon({
-    path: iconPath,
+  // Show the page action (icon in the address bar)
+  browser.pageAction.setIcon({
     tabId: tabId,
+    path: iconPath,
   });
+
+  // Make the page action icon visible in the address bar
+  browser.pageAction.show(tabId);
 }
 
-// Check the site status for a given tab and URL
-function checkSiteAndUpdateIcon(tabId, url) {
+// Check the site status and update the page action icon
+function checkSiteAndUpdatePageAction(tabId, url) {
   if (!url) return;
 
   const currentUrl = normalizeUrl(url.trim());
   console.log(
-    "Checking site status for toolbar icon:",
+    "Checking site status for address bar icon:",
     currentUrl,
     "TabId:",
     tabId
@@ -143,7 +147,7 @@ function checkSiteAndUpdateIcon(tabId, url) {
 
   // Check if the site is starred, safe, unsafe, or potentially unsafe
   let isStarred = starredSites.some(
-    (site) => normalizeUrl(site) === currentUrl
+    (site) => currentUrl.startsWith(normalizeUrl(site))  // Subdirectory check
   );
   let isSafe = safeSites.some((site) => normalizeUrl(site) === currentUrl);
   let isUnsafe = unsafeSites.some((site) =>
@@ -155,30 +159,36 @@ function checkSiteAndUpdateIcon(tabId, url) {
 
   // Prioritize starred sites first, then safe sites
   if (isStarred) {
-    console.log("Updating toolbar icon to starred for:", currentUrl);
-    updateIcon("starred", tabId);
+    console.log("Updating address bar icon to starred for:", currentUrl);
+    updatePageAction("starred", tabId);
   } else if (isSafe) {
-    console.log("Updating toolbar icon to safe for:", currentUrl);
-    updateIcon("safe", tabId);
+    console.log("Updating address bar icon to safe for:", currentUrl);
+    updatePageAction("safe", tabId);
   } else if (isUnsafe) {
-    console.log("Updating toolbar icon to unsafe for:", currentUrl);
-    updateIcon("unsafe", tabId);
+    console.log("Updating address bar icon to unsafe for:", currentUrl);
+    updatePageAction("unsafe", tabId);
   } else if (isPotentiallyUnsafe) {
-    console.log("Updating toolbar icon to potentially unsafe for:", currentUrl);
-    updateIcon("potentially_unsafe", tabId);
+    console.log(
+      "Updating address bar icon to potentially unsafe for:",
+      currentUrl
+    );
+    updatePageAction("potentially_unsafe", tabId);
   } else {
     console.log("No data for this site:", currentUrl);
-    updateIcon("default", tabId);
+    updatePageAction("default", tabId);
   }
 }
 
-// Listen for messages from the popup
+// Listen for messages from the popup to check site status
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("Received message in background for site:", message.url);
+
   if (message.action === "checkSiteStatus") {
     const currentUrl = normalizeUrl(message.url.trim());
+    console.log("Checking site status for:", currentUrl);
+
     let isStarred = starredSites.some(
-      (site) => normalizeUrl(site) === currentUrl
+      (site) => currentUrl.startsWith(normalizeUrl(site))  // Subdirectory check
     );
     let isSafe = safeSites.some((site) => normalizeUrl(site) === currentUrl);
     let isUnsafe = unsafeSites.some((site) =>
@@ -188,6 +198,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       currentUrl.includes(normalizeUrl(site))
     );
 
+    // Return appropriate status to the popup
     if (isStarred) {
       sendResponse({ status: "starred", url: currentUrl });
     } else if (isSafe) {
@@ -199,8 +210,28 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     } else {
       sendResponse({ status: "no_data", url: currentUrl });
     }
+  } else {
+    console.error("Unknown action:", message.action);
+    sendResponse({ status: "error", url: message.url });
   }
+
   return true;
+});
+
+// Listen for tab updates
+browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === "complete" && tab.url) {
+    checkSiteAndUpdatePageAction(tabId, tab.url);
+  }
+});
+
+// Listen for tab activation
+browser.tabs.onActivated.addListener((activeInfo) => {
+  browser.tabs.get(activeInfo.tabId, (tab) => {
+    if (tab.url) {
+      checkSiteAndUpdatePageAction(tab.id, tab.url);
+    }
+  });
 });
 
 // Initialize the extension
@@ -209,22 +240,6 @@ async function initializeExtension() {
   await fetchFilterLists();
   await fetchSafeSites();
   await fetchStarredSites();
-
-  // Listen for tab updates after lists are fetched
-  browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    if (changeInfo.status === "complete" && tab.url) {
-      checkSiteAndUpdateIcon(tabId, tab.url);
-    }
-  });
-
-  // Listen for tab activation after lists are fetched
-  browser.tabs.onActivated.addListener((activeInfo) => {
-    browser.tabs.get(activeInfo.tabId, (tab) => {
-      if (tab.url) {
-        checkSiteAndUpdateIcon(tab.id, tab.url);
-      }
-    });
-  });
 
   console.log("Extension initialized successfully.");
 }
