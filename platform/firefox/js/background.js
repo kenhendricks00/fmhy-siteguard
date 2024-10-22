@@ -6,8 +6,8 @@ const safeListURL = "https://api.fmhy.net/single-page";
 const starredListURL =
   "https://raw.githubusercontent.com/fmhy/bookmarks/refs/heads/main/fmhy_in_bookmarks_starred_only.html";
 
-let unsafeSites = [];
-let potentiallyUnsafeSites = [];
+let unsafeSitesRegex = null;
+let potentiallyUnsafeSitesRegex = null;
 let safeSites = [];
 let starredSites = ["https://fmhy.net"];
 
@@ -28,20 +28,35 @@ function extractUrlsFromBookmarks(html) {
   return urls;
 }
 
-// Helper function to normalize URLs to domain only (removes protocol, www, and trailing slashes)
-function extractDomain(url) {
-  try {
-    const urlObj = new URL(url);
-    return urlObj.hostname.replace(/^www\./, ""); // Remove "www." if present
-  } catch (e) {
-    return url
-      .replace(/^https?:\/\//, "")
-      .replace(/^www\./, "")
-      .split("/")[0];
-  }
+// Helper function to normalize URLs (removes trailing slashes)
+function normalizeUrl(url) {
+  return url.replace(/\/+$/, ""); // Remove trailing slash only, no www. removal
 }
 
-// Fetch the unsafe and potentially unsafe filter lists
+// Helper function to extract root domain from URL
+function extractRootUrl(url) {
+  const urlObj = new URL(url);
+  return `${urlObj.protocol}//${urlObj.hostname}`; // Extract protocol and hostname
+}
+
+// Function to generate a regex from a list of domains/URLs
+function generateRegexFromList(list) {
+  const escapedList = list.map((domain) =>
+    domain.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  );
+  return new RegExp(`(${escapedList.join("|")})`, "i");
+}
+
+// Helper function to extract URLs from filter lists (ignoring comments and empty lines)
+function extractUrlsFromFilterList(text) {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("!")) // Ignore comments
+    .map((line) => normalizeUrl(line));
+}
+
+// Fetch the unsafe and potentially unsafe filter lists and generate regex
 async function fetchFilterLists() {
   console.log("Fetching filter lists...");
 
@@ -53,20 +68,30 @@ async function fetchFilterLists() {
 
     if (unsafeResponse.ok) {
       const unsafeText = await unsafeResponse.text();
-      unsafeSites = unsafeText
-        .split("\n")
-        .map((line) => extractDomain(line.trim()))
-        .filter((line) => line && !line.startsWith("#"));
-      console.log("Parsed Unsafe Sites:", unsafeSites);
+      const unsafeSites = extractUrlsFromFilterList(unsafeText);
+      unsafeSitesRegex = generateRegexFromList(unsafeSites);
+      console.log("Generated Unsafe Sites Regex:", unsafeSitesRegex);
+    } else {
+      console.error("Failed to fetch unsafe sites:", unsafeResponse.status);
     }
 
     if (potentiallyUnsafeResponse.ok) {
       const potentiallyUnsafeText = await potentiallyUnsafeResponse.text();
-      potentiallyUnsafeSites = potentiallyUnsafeText
-        .split("\n")
-        .map((line) => extractDomain(line.trim()))
-        .filter((line) => line && !line.startsWith("#"));
-      console.log("Parsed Potentially Unsafe Sites:", potentiallyUnsafeSites);
+      const potentiallyUnsafeSites = extractUrlsFromFilterList(
+        potentiallyUnsafeText
+      );
+      potentiallyUnsafeSitesRegex = generateRegexFromList(
+        potentiallyUnsafeSites
+      );
+      console.log(
+        "Generated Potentially Unsafe Sites Regex:",
+        potentiallyUnsafeSitesRegex
+      );
+    } else {
+      console.error(
+        "Failed to fetch potentially unsafe sites:",
+        potentiallyUnsafeResponse.status
+      );
     }
   } catch (error) {
     console.error("Error fetching filter lists:", error);
@@ -82,13 +107,15 @@ async function fetchSafeSites() {
       const markdown = await response.text();
       const urls = extractUrlsFromMarkdown(markdown);
       urls.forEach((siteUrl) => {
-        let domain = extractDomain(siteUrl.trim());
-        if (!safeSites.includes(domain)) {
-          safeSites.push(domain);
+        let fullUrl = normalizeUrl(siteUrl.trim());
+        if (!safeSites.includes(fullUrl)) {
+          safeSites.push(fullUrl);
         }
       });
-      console.log("Parsed Safe Sites:", safeSites);
+    } else {
+      console.error("Failed to fetch safe sites:", response.status);
     }
+    console.log("Parsed Safe Sites:", safeSites);
   } catch (error) {
     console.error("Error fetching safe sites:", error);
   }
@@ -102,13 +129,16 @@ async function fetchStarredSites() {
     if (response.ok) {
       const html = await response.text();
       const urls = extractUrlsFromBookmarks(html);
-      // Normalize and add domains to the starredSites array
-      starredSites = [...new Set(urls.map(extractDomain))];
+      starredSites = [...new Set(urls.map(normalizeUrl))];
+
       // Ensure fmhy.net is always in the starred list
-      if (!starredSites.includes("fmhy.net")) {
-        starredSites.push("fmhy.net");
+      if (!starredSites.includes("https://fmhy.net")) {
+        starredSites.push("https://fmhy.net");
       }
+
       console.log("Parsed Starred Sites:", starredSites);
+    } else {
+      console.error("Failed to fetch starred sites:", response.status);
     }
   } catch (error) {
     console.error("Error fetching starred sites:", error);
@@ -127,6 +157,8 @@ function updatePageAction(status, tabId) {
     iconPath = "res/icons/potentially_unsafe.png";
   } else if (status === "starred") {
     iconPath = "res/icons/starred.png";
+  } else if (status === "default") {
+    iconPath = "res/ext_icon_144.png";
   }
 
   // Show the page action (icon in the address bar)
@@ -139,42 +171,32 @@ function updatePageAction(status, tabId) {
   browser.pageAction.show(tabId);
 }
 
-// Check the site status and update the page action icon
+// Check the site status using regex for unsafe/potentially unsafe and arrays for safe/starred
 function checkSiteAndUpdatePageAction(tabId, url) {
   if (!url) return;
 
-  const currentDomain = extractDomain(url.trim());
-  console.log(
-    "Checking site status for address bar icon:",
-    currentDomain,
-    "TabId:",
-    tabId
-  );
+  const normalizedUrl = normalizeUrl(url.trim());
+  const rootUrl = normalizeUrl(extractRootUrl(url.trim()));
+  console.log("Checking site status for:", normalizedUrl, "TabId:", tabId);
 
-  // Check if the site is starred, safe, unsafe, or potentially unsafe
-  let isStarred = starredSites.includes(currentDomain);
-  let isSafe = safeSites.includes(currentDomain);
-  let isUnsafe = unsafeSites.includes(currentDomain);
-  let isPotentiallyUnsafe = potentiallyUnsafeSites.includes(currentDomain);
+  let isUnsafe =
+    unsafeSitesRegex?.test(rootUrl) || unsafeSitesRegex?.test(normalizedUrl);
+  let isPotentiallyUnsafe =
+    potentiallyUnsafeSitesRegex?.test(rootUrl) ||
+    potentiallyUnsafeSitesRegex?.test(normalizedUrl);
+  let isStarred =
+    starredSites.includes(rootUrl) || starredSites.includes(normalizedUrl);
+  let isSafe = safeSites.includes(rootUrl) || safeSites.includes(normalizedUrl);
 
-  // Prioritize starred sites first, then unsafe sites, then potentially unsafe, then safe sites
   if (isStarred) {
-    console.log("Updating address bar icon to starred for:", currentDomain);
     updatePageAction("starred", tabId);
+  } else if (isSafe) {
+    updatePageAction("safe", tabId);
   } else if (isUnsafe) {
-    console.log("Updating address bar icon to unsafe for:", currentDomain);
     updatePageAction("unsafe", tabId);
   } else if (isPotentiallyUnsafe) {
-    console.log(
-      "Updating address bar icon to potentially unsafe for:",
-      currentDomain
-    );
     updatePageAction("potentially_unsafe", tabId);
-  } else if (isSafe) {
-    console.log("Updating address bar icon to safe for:", currentDomain);
-    updatePageAction("safe", tabId);
   } else {
-    console.log("No data for this site:", currentDomain);
     updatePageAction("default", tabId);
   }
 }
@@ -184,25 +206,31 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("Received message in background for site:", message.url);
 
   if (message.action === "checkSiteStatus") {
-    const currentDomain = extractDomain(message.url.trim());
-    console.log("Checking site status for:", currentDomain);
+    const normalizedUrl = normalizeUrl(message.url.trim());
+    const rootUrl = normalizeUrl(extractRootUrl(normalizedUrl));
+    console.log("Checking site status for:", rootUrl);
 
-    let isStarred = starredSites.includes(currentDomain);
-    let isSafe = safeSites.includes(currentDomain);
-    let isUnsafe = unsafeSites.includes(currentDomain);
-    let isPotentiallyUnsafe = potentiallyUnsafeSites.includes(currentDomain);
+    let isUnsafe =
+      unsafeSitesRegex?.test(rootUrl) || unsafeSitesRegex?.test(normalizedUrl);
+    let isPotentiallyUnsafe =
+      potentiallyUnsafeSitesRegex?.test(rootUrl) ||
+      potentiallyUnsafeSitesRegex?.test(normalizedUrl);
+    let isStarred =
+      starredSites.includes(rootUrl) || starredSites.includes(normalizedUrl);
+    let isSafe =
+      safeSites.includes(rootUrl) || safeSites.includes(normalizedUrl);
 
     // Return appropriate status to the popup
     if (isStarred) {
-      sendResponse({ status: "starred", url: currentDomain });
+      sendResponse({ status: "starred", url: rootUrl });
     } else if (isUnsafe) {
-      sendResponse({ status: "unsafe", url: currentDomain });
+      sendResponse({ status: "unsafe", url: rootUrl });
     } else if (isPotentiallyUnsafe) {
-      sendResponse({ status: "potentially_unsafe", url: currentDomain });
+      sendResponse({ status: "potentially_unsafe", url: rootUrl });
     } else if (isSafe) {
-      sendResponse({ status: "safe", url: currentDomain });
+      sendResponse({ status: "safe", url: rootUrl });
     } else {
-      sendResponse({ status: "no_data", url: currentDomain });
+      sendResponse({ status: "no_data", url: rootUrl });
     }
   } else {
     console.error("Unknown action:", message.action);
