@@ -1,13 +1,16 @@
 name: Release Extensions
 
 on:
+  # Trigger the workflow on push of a new tag
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*.*.*'  # Trigger when a tag matching this pattern is pushed
+
+  # Allow manual triggering from the GitHub UI
   workflow_dispatch:  # This allows you to manually trigger the workflow from GitHub UI
 
 permissions:
-  contents: write  # Grants write access to the repository content (including releases)
+  contents: write  # Grants write access to the repository contents (including releases)
 
 jobs:
   build-and-release:
