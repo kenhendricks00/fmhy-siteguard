@@ -1,16 +1,13 @@
 name: Release Extensions
 
 on:
-  # Trigger the workflow on push of a new tag
   push:
     tags:
-      - 'v*.*.*'  # Trigger when a tag matching this pattern is pushed
-
-  # Allow manual triggering from the GitHub UI
-  workflow_dispatch:  # This allows you to manually trigger the workflow from GitHub UI
+      - 'v*.*.*'
+  workflow_dispatch:  # Manual trigger
 
 permissions:
-  contents: write  # Grants write access to the repository contents (including releases)
+  contents: write
 
 jobs:
   build-and-release:
@@ -32,18 +29,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y zip
 
+      # Step to ensure version is extracted only from tags
       - name: Get Version from Tag
         id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+            echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          else
+            echo "This workflow was triggered without a tag." 1>&2
+            exit 1
+          fi
 
       - name: Assemble Release Notes
         id: release_notes
         run: |
+          VERSION=${{ env.VERSION }}
           echo "## Release $VERSION" > release_notes.md
           echo "" >> release_notes.md
-          awk "/^## \[$VERSION\]/, /^## \[/" CHANGELOG.md >> release_notes.md
-          if ! grep -q "## \[$VERSION\]" release_notes.md; then
-            cat RELEASE.HEAD.md >> release_notes.md
+          # Escape special characters for awk
+          awk "/^## \\[$VERSION\\]/, /^## \\[/" CHANGELOG.md >> release_notes.md || cat RELEASE.HEAD.md >> release_notes.md
 
       - name: Create GitHub Release
         id: create_release
