@@ -147,7 +147,7 @@ async function fetchStarredSites() {
 
 // Update the Address Bar icon based on the site's status
 function updatePageAction(status, tabId) {
-  let iconPath = "res/ext_icon_144.png"; // Default extension icon
+  let iconPath = "res/icons/default.png"; // Default extension icon
 
   if (status === "safe") {
     iconPath = "res/icons/safe.png";
