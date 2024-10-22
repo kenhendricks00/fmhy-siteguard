@@ -166,8 +166,8 @@ function updatePageAction(status, tabId) {
       38: "../res/icons/starred_38.png",
     },
     default: {
-      19: "../res/ext_icon_144.png",
-      38: "../res/ext_icon_144.png", // fallback to a known good icon
+      19: "../res/icons/default_19.png",
+      38: "../res/icons/default_38.png", // fallback to a known good icon
     },
   };
 
