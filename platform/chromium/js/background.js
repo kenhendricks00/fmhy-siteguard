@@ -169,18 +169,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("Checking site status for:", currentUrl);
 
     let isStarred = starredSites.some(
-      (site) => rootUrl === extractRootUrl(site)
+      (site) =>
+        normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
     );
-    let isSafe = safeSites.some((site) => rootUrl === extractRootUrl(site));
+    let isSafe = safeSites.some(
+      (site) =>
+        normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
+    );
     let isUnsafe = unsafeSites.some(
       (site) =>
-        currentUrl.includes(normalizeUrl(site)) ||
-        rootUrl.includes(normalizeUrl(site))
+        normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
     );
     let isPotentiallyUnsafe = potentiallyUnsafeSites.some(
       (site) =>
-        currentUrl.includes(normalizeUrl(site)) ||
-        rootUrl.includes(normalizeUrl(site))
+        normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
     );
 
     // Return appropriate status to the popup
@@ -218,23 +220,23 @@ function checkSiteAndUpdatePageAction(tabId, url) {
 
   // Check if the site is starred, safe, unsafe, or potentially unsafe
   let isStarred = starredSites.some(
-    (site) => rootUrl === extractRootUrl(site) // Root URL check
+    (site) =>
+      normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
   );
 
   let isSafe = safeSites.some(
-    (site) => rootUrl === extractRootUrl(site) // Root URL check
+    (site) =>
+      normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
   );
 
   let isUnsafe = unsafeSites.some(
     (site) =>
-      currentUrl.includes(normalizeUrl(site)) ||
-      rootUrl.includes(normalizeUrl(site)) // Match either current URL or root
+      normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
   );
 
   let isPotentiallyUnsafe = potentiallyUnsafeSites.some(
     (site) =>
-      currentUrl.includes(normalizeUrl(site)) ||
-      rootUrl.includes(normalizeUrl(site)) // Match either current URL or root
+      normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
   );
 
   // Prioritize starred sites first, then safe sites
