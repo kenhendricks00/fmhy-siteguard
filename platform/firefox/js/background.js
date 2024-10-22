@@ -1,3 +1,4 @@
+// background.js
 const filterListURLUnsafe =
   "https://raw.githubusercontent.com/fmhy/FMHYFilterlist/refs/heads/main/sitelist.txt";
 const filterListURLPotentiallyUnsafe =
@@ -145,23 +146,32 @@ function checkSiteAndUpdatePageAction(tabId, url) {
 
   const currentUrl = normalizeUrl(url.trim());
   const rootUrl = extractRootUrl(currentUrl);
-  console.log("Checking site status for address bar icon:", currentUrl, "TabId:", tabId);
+  console.log(
+    "Checking site status for address bar icon:",
+    currentUrl,
+    "TabId:",
+    tabId
+  );
 
   // Check if the site is starred, safe, unsafe, or potentially unsafe
-  let isStarred = starredSites.some((site) =>
-    rootUrl === extractRootUrl(site) // Root URL check
+  let isStarred = starredSites.some(
+    (site) =>
+      normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
   );
 
-  let isSafe = safeSites.some((site) =>
-    rootUrl === extractRootUrl(site) // Root URL check
+  let isSafe = safeSites.some(
+    (site) =>
+      normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
   );
 
-  let isUnsafe = unsafeSites.some((site) =>
-    currentUrl.includes(normalizeUrl(site)) || rootUrl.includes(normalizeUrl(site)) // Match either current URL or root
+  let isUnsafe = unsafeSites.some(
+    (site) =>
+      normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
   );
 
-  let isPotentiallyUnsafe = potentiallyUnsafeSites.some((site) =>
-    currentUrl.includes(normalizeUrl(site)) || rootUrl.includes(normalizeUrl(site)) // Match either current URL or root
+  let isPotentiallyUnsafe = potentiallyUnsafeSites.some(
+    (site) =>
+      normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
   );
 
   // Prioritize starred sites first, then safe sites
@@ -175,7 +185,10 @@ function checkSiteAndUpdatePageAction(tabId, url) {
     console.log("Updating address bar icon to unsafe for:", currentUrl);
     updatePageAction("unsafe", tabId);
   } else if (isPotentiallyUnsafe) {
-    console.log("Updating address bar icon to potentially unsafe for:", currentUrl);
+    console.log(
+      "Updating address bar icon to potentially unsafe for:",
+      currentUrl
+    );
     updatePageAction("potentially_unsafe", tabId);
   } else {
     console.log("No data for this site:", currentUrl);
@@ -192,13 +205,21 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const rootUrl = extractRootUrl(currentUrl);
     console.log("Checking site status for:", currentUrl);
 
-    let isStarred = starredSites.some((site) => rootUrl === extractRootUrl(site));
-    let isSafe = safeSites.some((site) => rootUrl === extractRootUrl(site));
-    let isUnsafe = unsafeSites.some((site) =>
-      currentUrl.includes(normalizeUrl(site)) || rootUrl.includes(normalizeUrl(site))
+    let isStarred = starredSites.some(
+      (site) =>
+        normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
     );
-    let isPotentiallyUnsafe = potentiallyUnsafeSites.some((site) =>
-      currentUrl.includes(normalizeUrl(site)) || rootUrl.includes(normalizeUrl(site))
+    let isSafe = safeSites.some(
+      (site) =>
+        normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
+    );
+    let isUnsafe = unsafeSites.some(
+      (site) =>
+        normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
+    );
+    let isPotentiallyUnsafe = potentiallyUnsafeSites.some(
+      (site) =>
+        normalizeUrl(site) === rootUrl || normalizeUrl(site) === currentUrl
     );
 
     // Return appropriate status to the popup
