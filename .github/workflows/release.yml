@@ -1,0 +1,78 @@
+name: Build and Release Browser Extensions
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write # Required for creating releases
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js (if required for build)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'  # Or whichever version you need
+
+      # Step 3: Get release version from tag
+      - name: Get release version
+        id: release_info
+        run: echo "::set-output name=VERSION::${GITHUB_REF##*/}"
+
+      # Step 4: Create directories for packaging
+      - name: Create build directories
+        run: |
+          mkdir -p dist/build
+          echo "Created build directories for Chromium and Firefox"
+
+      # Step 5: Package Chromium extension
+      - name: Build Chromium package
+        run: |
+          ./tools/make-chromium.sh ${{ steps.release_info.outputs.VERSION }}
+
+      # Step 6: Package Firefox extension
+      - name: Build Firefox package
+        run: |
+          ./tools/make-firefox.sh ${{ steps.release_info.outputs.VERSION }}
+
+      # Step 7: Create GitHub release
+      - name: Create GitHub release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.release_info.outputs.VERSION }}
+          release_name: "Release ${{ steps.release_info.outputs.VERSION }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 8: Upload Chromium extension
+      - name: Upload Chromium extension
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/build/uBlock0_${{ steps.release_info.outputs.VERSION }}.chromium.zip
+          asset_name: extension_${{ steps.release_info.outputs.VERSION }}_chromium.zip
+          asset_content_type: application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 9: Upload Firefox extension
+      - name: Upload Firefox extension
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/build/uBlock0_${{ steps.release_info.outputs.VERSION }}.firefox.xpi
+          asset_name: extension_${{ steps.release_info.outputs.VERSION }}_firefox.xpi
+          asset_content_type: application/x-xpinstall
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
