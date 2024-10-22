@@ -4,11 +4,10 @@ on:
   push:
     tags:
       - 'v*.*.*'
-  workflow_dispatch:
+  workflow_dispatch:  # This allows you to manually trigger the workflow from GitHub UI
 
 permissions:
-  contents: read
-  releases: write
+  contents: write  # Grants write access to the repository content (including releases)
 
 jobs:
   build-and-release:
@@ -42,7 +41,6 @@ jobs:
           awk "/^## \[$VERSION\]/, /^## \[/" CHANGELOG.md >> release_notes.md
           if ! grep -q "## \[$VERSION\]" release_notes.md; then
             cat RELEASE.HEAD.md >> release_notes.md
-          fi
 
       - name: Create GitHub Release
         id: create_release
