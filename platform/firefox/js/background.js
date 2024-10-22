@@ -33,6 +33,12 @@ function normalizeUrl(url) {
   return url.replace(/\/+$/, "").replace(/^https?:\/\/www\./, "https://"); // Remove trailing slash if exists and "www." if present
 }
 
+// New helper function to extract root domain from URL
+function extractRootUrl(url) {
+  const urlObj = new URL(url);
+  return `${urlObj.protocol}//${urlObj.hostname}`; // Extract protocol and hostname
+}
+
 // Fetch the unsafe and potentially unsafe filter lists
 async function fetchFilterLists() {
   console.log("Fetching filter lists...");
@@ -138,23 +144,24 @@ function checkSiteAndUpdatePageAction(tabId, url) {
   if (!url) return;
 
   const currentUrl = normalizeUrl(url.trim());
-  console.log(
-    "Checking site status for address bar icon:",
-    currentUrl,
-    "TabId:",
-    tabId
-  );
+  const rootUrl = extractRootUrl(currentUrl);
+  console.log("Checking site status for address bar icon:", currentUrl, "TabId:", tabId);
 
   // Check if the site is starred, safe, unsafe, or potentially unsafe
-  let isStarred = starredSites.some(
-    (site) => currentUrl.startsWith(normalizeUrl(site))  // Subdirectory check
+  let isStarred = starredSites.some((site) =>
+    rootUrl === extractRootUrl(site) // Root URL check
   );
-  let isSafe = safeSites.some((site) => normalizeUrl(site) === currentUrl);
+
+  let isSafe = safeSites.some((site) =>
+    rootUrl === extractRootUrl(site) // Root URL check
+  );
+
   let isUnsafe = unsafeSites.some((site) =>
-    currentUrl.includes(normalizeUrl(site))
+    currentUrl.includes(normalizeUrl(site)) || rootUrl.includes(normalizeUrl(site)) // Match either current URL or root
   );
+
   let isPotentiallyUnsafe = potentiallyUnsafeSites.some((site) =>
-    currentUrl.includes(normalizeUrl(site))
+    currentUrl.includes(normalizeUrl(site)) || rootUrl.includes(normalizeUrl(site)) // Match either current URL or root
   );
 
   // Prioritize starred sites first, then safe sites
@@ -168,10 +175,7 @@ function checkSiteAndUpdatePageAction(tabId, url) {
     console.log("Updating address bar icon to unsafe for:", currentUrl);
     updatePageAction("unsafe", tabId);
   } else if (isPotentiallyUnsafe) {
-    console.log(
-      "Updating address bar icon to potentially unsafe for:",
-      currentUrl
-    );
+    console.log("Updating address bar icon to potentially unsafe for:", currentUrl);
     updatePageAction("potentially_unsafe", tabId);
   } else {
     console.log("No data for this site:", currentUrl);
@@ -185,30 +189,29 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.action === "checkSiteStatus") {
     const currentUrl = normalizeUrl(message.url.trim());
+    const rootUrl = extractRootUrl(currentUrl);
     console.log("Checking site status for:", currentUrl);
 
-    let isStarred = starredSites.some(
-      (site) => currentUrl.startsWith(normalizeUrl(site))  // Subdirectory check
-    );
-    let isSafe = safeSites.some((site) => normalizeUrl(site) === currentUrl);
+    let isStarred = starredSites.some((site) => rootUrl === extractRootUrl(site));
+    let isSafe = safeSites.some((site) => rootUrl === extractRootUrl(site));
     let isUnsafe = unsafeSites.some((site) =>
-      currentUrl.includes(normalizeUrl(site))
+      currentUrl.includes(normalizeUrl(site)) || rootUrl.includes(normalizeUrl(site))
     );
     let isPotentiallyUnsafe = potentiallyUnsafeSites.some((site) =>
-      currentUrl.includes(normalizeUrl(site))
+      currentUrl.includes(normalizeUrl(site)) || rootUrl.includes(normalizeUrl(site))
     );
 
     // Return appropriate status to the popup
     if (isStarred) {
-      sendResponse({ status: "starred", url: currentUrl });
+      sendResponse({ status: "starred", url: rootUrl });
     } else if (isSafe) {
-      sendResponse({ status: "safe", url: currentUrl });
+      sendResponse({ status: "safe", url: rootUrl });
     } else if (isUnsafe) {
-      sendResponse({ status: "unsafe", url: currentUrl });
+      sendResponse({ status: "unsafe", url: rootUrl });
     } else if (isPotentiallyUnsafe) {
-      sendResponse({ status: "potentially_unsafe", url: currentUrl });
+      sendResponse({ status: "potentially_unsafe", url: rootUrl });
     } else {
-      sendResponse({ status: "no_data", url: currentUrl });
+      sendResponse({ status: "no_data", url: rootUrl });
     }
   } else {
     console.error("Unknown action:", message.action);
