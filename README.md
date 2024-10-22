@@ -23,14 +23,14 @@
 <div align="center">
   <table>
     <tr>
-      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/icons/default.png"></td>
+      <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/icons/default.png" style="width: 144px"></td>
       <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/icons/starred.png" style="width: 144px"></td>
       <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/icons/safe.png" style="width: 144px"></td>
       <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/icons/potentially_unsafe.png" style="width: 144px"></td>
       <td><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/icons/unsafe.png" style="width: 144px"></td>
     </tr>
     <tr>
-      <td>Default/Not in Wiki</td>
+      <td>Not in Wiki</td>
       <td>Starred</td>
       <td>Safe</td>
       <td>Potentially Unsafe</td>
