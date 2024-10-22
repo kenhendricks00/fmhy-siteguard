@@ -6,8 +6,8 @@ const safeListURL = "https://api.fmhy.net/single-page";
 const starredListURL =
   "https://raw.githubusercontent.com/fmhy/bookmarks/refs/heads/main/fmhy_in_bookmarks_starred_only.html";
 
-let unsafeSites = [];
-let potentiallyUnsafeSites = [];
+let unsafeSitesRegex = null;
+let potentiallyUnsafeSitesRegex = null;
 let safeSites = [];
 let starredSites = ["https://fmhy.net"];
 
