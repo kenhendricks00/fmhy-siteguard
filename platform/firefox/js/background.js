@@ -158,7 +158,7 @@ function updatePageAction(status, tabId) {
   } else if (status === "starred") {
     iconPath = "res/icons/starred.png";
   } else if (status === "default") {
-    iconPath = "res/ext_icon_144.png";
+    iconPath = "res/icons/default.png";
   }
 
   // Show the page action (icon in the address bar)
