@@ -1,0 +1,86 @@
+name: Release Extensions
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+  releases: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zip
+
+      - name: Get Version from Tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Assemble Release Notes
+        id: release_notes
+        run: |
+          echo "## Release $VERSION" > release_notes.md
+          echo "" >> release_notes.md
+          awk "/^## \[$VERSION\]/, /^## \[/" CHANGELOG.md >> release_notes.md
+          if ! grep -q "## \[$VERSION\]" release_notes.md; then
+            cat RELEASE.HEAD.md >> release_notes.md
+          fi
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.VERSION }}
+          release_name: Release ${{ env.VERSION }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+
+      - name: Build Chrome Extension
+        run: |
+          chmod +x tools/make-chromium.sh
+          tools/make-chromium.sh $VERSION
+
+      - name: Build Firefox Extension
+        run: |
+          chmod +x tools/make-firefox.sh
+          tools/make-firefox.sh $VERSION
+
+      - name: Upload Chrome Extension
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/build/FMHY-SafeGuard_${{ env.VERSION }}.chromium.zip
+          asset_name: FMHY-SafeGuard_${{ env.VERSION }}.chromium.zip
+          asset_content_type: application/zip
+
+      - name: Upload Firefox Extension
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/build/FMHY-SafeGuard_${{ env.VERSION }}.firefox.xpi
+          asset_name: FMHY-SafeGuard_${{ env.VERSION }}.firefox.xpi
+          asset_content_type: application/x-xpinstall
