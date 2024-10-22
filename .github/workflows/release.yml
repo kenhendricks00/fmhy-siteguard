@@ -4,10 +4,10 @@ on:
   push:
     tags:
       - 'v*.*.*'
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:  # This allows manual triggering from GitHub UI
 
 permissions:
-  contents: write
+  contents: write  # Required to write contents and create releases
 
 jobs:
   build-and-release:
@@ -29,16 +29,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y zip
 
-      # Step to ensure version is extracted only from tags
-      - name: Get Version from Tag
+      # Step to get the version, or use a default if no tag exists (manual trigger)
+      - name: Get Version from Tag or Default
         id: get_version
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/}
             echo "VERSION=${VERSION}" >> $GITHUB_ENV
           else
-            echo "This workflow was triggered without a tag." 1>&2
-            exit 1
+            echo "No tag found, using default version"
+            echo "VERSION=dev-version" >> $GITHUB_ENV
           fi
 
       - name: Assemble Release Notes
@@ -47,8 +47,14 @@ jobs:
           VERSION=${{ env.VERSION }}
           echo "## Release $VERSION" > release_notes.md
           echo "" >> release_notes.md
-          # Escape special characters for awk
-          awk "/^## \\[$VERSION\\]/, /^## \\[/" CHANGELOG.md >> release_notes.md || cat RELEASE.HEAD.md >> release_notes.md
+          # Use awk to extract release notes if a valid version is found
+          if [[ "$VERSION" != "dev-version" ]]; then
+            # Escape special characters for awk and only extract if it's a tagged release
+            awk "/^## \\[$VERSION\\]/, /^## \\[/" CHANGELOG.md >> release_notes.md || cat RELEASE.HEAD.md >> release_notes.md
+          else
+            echo "Manual run, no release notes extracted from CHANGELOG.md" >> release_notes.md
+            cat RELEASE.HEAD.md >> release_notes.md
+          fi
 
       - name: Create GitHub Release
         id: create_release
