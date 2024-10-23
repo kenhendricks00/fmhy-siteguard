@@ -14,10 +14,6 @@
     },
     "permissions": [
         "activeTab",
-        "storage",
-        "alarms",
-        "declarativeNetRequest", 
-        "notifications",
         "declarativeContent"
     ],
     "background": {
