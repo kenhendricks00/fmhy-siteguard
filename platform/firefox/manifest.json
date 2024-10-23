@@ -14,11 +14,7 @@
     },
     "permissions": [
         "activeTab",
-        "<all_urls>",
-        "webRequest",
-        "webRequestBlocking",
-        "storage",
-        "notifications"
+        "<all_urls>"
     ],
     "background": {
         "scripts": ["js/background.js"],
