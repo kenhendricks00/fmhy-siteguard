@@ -147,58 +147,47 @@ async function fetchStarredSites() {
 
 // Update the Address Bar icon based on the site's status
 function updatePageAction(status, tabId) {
-  let iconPath = "res/icons/default.png"; // Default extension icon
+  // Define paths for different icon sizes
+  const icons = {
+    safe: {
+      19: "../res/icons/safe_19.png",
+      38: "../res/icons/safe_38.png",
+    },
+    unsafe: {
+      19: "../res/icons/unsafe_19.png",
+      38: "../res/icons/unsafe_38.png",
+    },
+    potentially_unsafe: {
+      19: "../res/icons/potentially_unsafe_19.png",
+      38: "../res/icons/potentially_unsafe_38.png",
+    },
+    starred: {
+      19: "../res/icons/starred_19.png",
+      38: "../res/icons/starred_38.png",
+    },
+    default: {
+      19: "../res/icons/default_19.png",
+      38: "../res/icons/default_38.png", // fallback to a known good icon
+    },
+  };
 
-  if (status === "safe") {
-    iconPath = "res/icons/safe.png";
-  } else if (status === "unsafe") {
-    iconPath = "res/icons/unsafe.png";
-  } else if (status === "potentially_unsafe") {
-    iconPath = "res/icons/potentially_unsafe.png";
-  } else if (status === "starred") {
-    iconPath = "res/icons/starred.png";
-  } else if (status === "default") {
-    iconPath = "res/icons/default.png";
-  }
+  let icon = icons[status] || icons["default"];
 
-  // Show the page action (icon in the address bar)
-  browser.pageAction.setIcon({
-    tabId: tabId,
-    path: iconPath,
-  });
-
-  // Make the page action icon visible in the address bar
-  browser.pageAction.show(tabId);
-}
-
-// Check the site status using regex for unsafe/potentially unsafe and arrays for safe/starred
-function checkSiteAndUpdatePageAction(tabId, url) {
-  if (!url) return;
-
-  const normalizedUrl = normalizeUrl(url.trim());
-  const rootUrl = normalizeUrl(extractRootUrl(url.trim()));
-  console.log("Checking site status for:", normalizedUrl, "TabId:", tabId);
-
-  let isUnsafe =
-    unsafeSitesRegex?.test(rootUrl) || unsafeSitesRegex?.test(normalizedUrl);
-  let isPotentiallyUnsafe =
-    potentiallyUnsafeSitesRegex?.test(rootUrl) ||
-    potentiallyUnsafeSitesRegex?.test(normalizedUrl);
-  let isStarred =
-    starredSites.includes(rootUrl) || starredSites.includes(normalizedUrl);
-  let isSafe = safeSites.includes(rootUrl) || safeSites.includes(normalizedUrl);
-
-  if (isStarred) {
-    updatePageAction("starred", tabId);
-  } else if (isSafe) {
-    updatePageAction("safe", tabId);
-  } else if (isUnsafe) {
-    updatePageAction("unsafe", tabId);
-  } else if (isPotentiallyUnsafe) {
-    updatePageAction("potentially_unsafe", tabId);
-  } else {
-    updatePageAction("default", tabId);
-  }
+  // Set the icon for the current tab with different sizes
+  browser.action.setIcon(
+    {
+      tabId: tabId,
+      path: {
+        19: icon[19], // 19x19 icon
+        38: icon[38], // 38x38 icon
+      },
+    },
+    () => {
+      if (browser.runtime.lastError) {
+        console.error("Error setting icon:", browser.runtime.lastError.message);
+      }
+    }
+  );
 }
 
 // Listen for messages from the popup to check site status
@@ -240,6 +229,36 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
+// Check the site status using regex for unsafe/potentially unsafe and arrays for safe/starred
+function checkSiteAndUpdatePageAction(tabId, url) {
+  if (!url) return;
+
+  const normalizedUrl = normalizeUrl(url.trim());
+  const rootUrl = normalizeUrl(extractRootUrl(url.trim()));
+  console.log("Checking site status for:", normalizedUrl, "TabId:", tabId);
+
+  let isUnsafe =
+    unsafeSitesRegex?.test(rootUrl) || unsafeSitesRegex?.test(normalizedUrl);
+  let isPotentiallyUnsafe =
+    potentiallyUnsafeSitesRegex?.test(rootUrl) ||
+    potentiallyUnsafeSitesRegex?.test(normalizedUrl);
+  let isStarred =
+    starredSites.includes(rootUrl) || starredSites.includes(normalizedUrl);
+  let isSafe = safeSites.includes(rootUrl) || safeSites.includes(normalizedUrl);
+
+  if (isStarred) {
+    updatePageAction("starred", tabId);
+  } else if (isSafe) {
+    updatePageAction("safe", tabId);
+  } else if (isUnsafe) {
+    updatePageAction("unsafe", tabId);
+  } else if (isPotentiallyUnsafe) {
+    updatePageAction("potentially_unsafe", tabId);
+  } else {
+    updatePageAction("default", tabId);
+  }
+}
+
 // Listen for tab updates
 browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === "complete" && tab.url) {
@@ -258,7 +277,6 @@ browser.tabs.onActivated.addListener((activeInfo) => {
 
 // Initialize the extension
 async function initializeExtension() {
-  // Fetch all necessary lists
   await fetchFilterLists();
   await fetchSafeSites();
   await fetchStarredSites();
@@ -266,5 +284,4 @@ async function initializeExtension() {
   console.log("Extension initialized successfully.");
 }
 
-// Initialize everything once the extension is loaded
 initializeExtension();
