@@ -19,7 +19,10 @@
         color: #848a94;
         margin: 0;
         padding: 10px;
-        max-width: 320px;
+        min-width: 250px;
+        max-width: 100%;
+        word-wrap: break-word;
+        box-sizing: border-box;
         overflow: hidden;
       }
 
@@ -185,6 +188,14 @@
       /* Animation for status change */
       .status-image.active {
         transform: scale(1.1);
+      }
+
+      #status-message,
+      #footer,
+      #feedback {
+        max-width: 100%;
+        word-wrap: break-word;
+        word-break: break-word;
       }
     </style>
   </head>
