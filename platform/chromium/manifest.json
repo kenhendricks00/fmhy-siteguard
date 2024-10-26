@@ -13,15 +13,11 @@
       "default_popup": "pub/index.html"
     },
     "permissions": [
-        "activeTab",
-        "declarativeContent"
+        "tabs"
     ],
     "background": {
         "service_worker": "js/background.js"
     },
-    "host_permissions": [
-      "<all_urls>"
-    ],
     "description": "An extension that detects starred, safe, unsafe or potentially unsafe sites using the FMHY Filterlist.",
     "minimum_chrome_version": "100"
 }
