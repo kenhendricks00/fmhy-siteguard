@@ -43,11 +43,7 @@
 
 <p align="center">
   <a href="https://addons.mozilla.org/en-US/firefox/addon/fmhy-safeguard/"><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/firefox_addon_image.png" alt="Get FMHY SafeGuard for Firefox"></a>
-  <a href=""><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/chrome_addon_image.png" alt="Get FMHY SafeGuard for Chrome"></a>
-<div align="center">
-<h2> <b> NOTE: The Chromium version of FMHY SafeGuard is now available! </b> </h2>
-<p> <b> However, the extension is currently undergoing review for the Chrome Web Store. </b> </p>
-</p>
+  <a href="https://chromewebstore.google.com/detail/fmhy-safeguard/ihcppnlmkfeclmehgdhjkglkbmiemnmp"><img src="https://github.com/kenhendricks00/FMHY-SafeGuard/blob/main/assets/chrome_addon_image.png" alt="Get FMHY SafeGuard for Chrome"></a>
 </div>
 
 ***
