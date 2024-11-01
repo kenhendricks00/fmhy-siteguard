@@ -5,8 +5,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   const statusMessage = document.getElementById("status-message");
   const errorMessage = document.getElementById("error-message");
 
-  // Helper function to normalize URLs (removes trailing slashes)
-  const normalizeUrl = (url) => url.replace(/\/+$/, "").trim();
+  // Helper function to normalize URLs (removes trailing slashes, query parameters, and fragments)
+  const normalizeUrl = (url) => {
+    const urlObj = new URL(url);
+    urlObj.search = ""; // Remove query parameters
+    urlObj.hash = ""; // Remove fragments
+    return urlObj.href.replace(/\/+$/, ""); // Remove trailing slash only
+  };
 
   // Helper function to extract the root domain from a URL
   function extractRootDomain(url) {
