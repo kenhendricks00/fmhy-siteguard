@@ -28,9 +28,12 @@ function extractUrlsFromBookmarks(html) {
   return urls;
 }
 
-// Helper function to normalize URLs (removes trailing slashes)
+// Helper function to normalize URLs (removes trailing slashes, query parameters, and fragments)
 function normalizeUrl(url) {
-  return url.replace(/\/+$/, ""); // Remove trailing slash only, no www. removal
+  const urlObj = new URL(url);
+  urlObj.search = ""; // Remove query parameters
+  urlObj.hash = ""; // Remove fragments
+  return urlObj.href.replace(/\/+$/, ""); // Remove trailing slash only
 }
 
 // Helper function to extract root domain from URL
