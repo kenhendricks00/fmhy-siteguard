@@ -30,10 +30,15 @@ function extractUrlsFromBookmarks(html) {
 
 // Helper function to normalize URLs (removes trailing slashes, query parameters, and fragments)
 function normalizeUrl(url) {
-  const urlObj = new URL(url);
-  urlObj.search = ""; // Remove query parameters
-  urlObj.hash = ""; // Remove fragments
-  return urlObj.href.replace(/\/+$/, ""); // Remove trailing slash only
+  try {
+    const urlObj = new URL(url);
+    urlObj.search = ""; // Remove query parameters
+    urlObj.hash = ""; // Remove fragments
+    return urlObj.href.replace(/\/+$/, ""); // Remove trailing slash only
+  } catch (error) {
+    console.warn(`Invalid URL skipped: ${url}`);
+    return null; // Return null for invalid URLs
+  }
 }
 
 // Helper function to extract root domain from URL
@@ -42,12 +47,13 @@ function extractRootUrl(url) {
   return `${urlObj.protocol}//${urlObj.hostname}`; // Extract protocol and hostname
 }
 
-// Function to generate a regex from a list of domains/URLs
+// Function to generate a regex from a list of domains/URLs, anchoring to start and end of the URL
 function generateRegexFromList(list) {
-  const escapedList = list.map((domain) =>
-    domain.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const escapedList = list.map(
+    (domain) => domain.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // Escape special characters
   );
-  return new RegExp(`(${escapedList.join("|")})`, "i");
+  // Anchor each domain with `(^|\\.)` at the start to ensure subdomain or exact match only
+  return new RegExp(`(^|\\.)(${escapedList.join("|")})($|\\/)`, "i");
 }
 
 // Helper function to extract URLs from filter lists (ignoring comments and empty lines)
@@ -55,8 +61,9 @@ function extractUrlsFromFilterList(text) {
   return text
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith("!")) // Ignore comments
-    .map((line) => normalizeUrl(line));
+    .filter((line) => line && !line.startsWith("!")) // Ignore comments and empty lines
+    .map((line) => normalizeUrl(line))
+    .filter((url) => url !== null); // Filter out null values from invalid URLs
 }
 
 // Fetch the unsafe and potentially unsafe filter lists and generate regex
