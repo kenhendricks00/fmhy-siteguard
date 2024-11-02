@@ -55,7 +55,7 @@
 
 # 📋 Usage Instructions
 
-1. **Install the Extension**: Install FMHY SafeGuard from the [Releases Page](https://github.com/kenhendricks00/FMHY-SafeGuard/releases) or the [Firefox page](https://addons.mozilla.org/en-US/firefox/addon/fmhy-safeguard/)/[Chrome Page]().
+1. **Install the Extension**: Install FMHY SafeGuard from the [Releases Page](https://github.com/kenhendricks00/FMHY-SafeGuard/releases) or the [Firefox page](https://addons.mozilla.org/en-US/firefox/addon/fmhy-safeguard/)/[Chrome Page](https://chromewebstore.google.com/detail/fmhy-safeguard/ihcppnlmkfeclmehgdhjkglkbmiemnmp).
 2. **Browse Securely**: Visit any website and the toolbar icon will automatically update to reflect the site’s safety status (Starred, Safe, Unsafe, Potentially Unsafe).
 3. **View More Info**: Click the extension icon to open a popup with detailed site status information, including a link to contribute or report unknown sites (Coming soon!).
 
@@ -68,7 +68,7 @@
 # 🚀 Get Started
 
 To start using FMHY SafeGuard, follow these steps:
-1. Download the extension from the [Releases page](https://github.com/kenhendricks00/FMHY-SafeGuard/releases) or the [Firefox page](https://addons.mozilla.org/en-US/firefox/addon/fmhy-safeguard/)/[Chrome Page]().
+1. Download the extension from the [Releases page](https://github.com/kenhendricks00/FMHY-SafeGuard/releases) or the [Firefox page](https://addons.mozilla.org/en-US/firefox/addon/fmhy-safeguard/)/[Chrome Page](https://chromewebstore.google.com/detail/fmhy-safeguard/ihcppnlmkfeclmehgdhjkglkbmiemnmp).
 2. Install it into your browser and start browsing securely.
 3. Customize the settings to your preferences via the extension’s pop-up (Coming soon!).
 
