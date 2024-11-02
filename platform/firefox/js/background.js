@@ -9,7 +9,7 @@ const starredListURL =
 let unsafeSitesRegex = null;
 let potentiallyUnsafeSitesRegex = null;
 let safeSites = [];
-let starredSites = ["https://fmhy.net"];
+let starredSites = ["https://fmhy.net", "https://fmhy.pages.dev/"];
 
 // Helper function to extract URLs from markdown text
 function extractUrlsFromMarkdown(markdown) {
@@ -28,12 +28,21 @@ function extractUrlsFromBookmarks(html) {
   return urls;
 }
 
-// Helper function to normalize URLs (removes trailing slashes, query parameters, and fragments)
+// Helper function to normalize URLs (adds protocol if missing, removes trailing slashes, query parameters, and fragments)
 function normalizeUrl(url) {
-  const urlObj = new URL(url);
-  urlObj.search = ""; // Remove query parameters
-  urlObj.hash = ""; // Remove fragments
-  return urlObj.href.replace(/\/+$/, ""); // Remove trailing slash only
+  try {
+    // Check if the URL starts with "http" or "https", if not, prepend "https://"
+    if (!/^https?:\/\//i.test(url)) {
+      url = `https://${url}`;
+    }
+    const urlObj = new URL(url);
+    urlObj.search = ""; // Remove query parameters
+    urlObj.hash = ""; // Remove fragments
+    return urlObj.href.replace(/\/+$/, ""); // Remove trailing slash only
+  } catch (error) {
+    console.warn(`Invalid URL skipped: ${url}`);
+    return null; // Return null for invalid URLs
+  }
 }
 
 // Helper function to extract root domain from URL
@@ -56,7 +65,8 @@ function extractUrlsFromFilterList(text) {
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line && !line.startsWith("!")) // Ignore comments
-    .map((line) => normalizeUrl(line));
+    .map((line) => normalizeUrl(line))
+    .filter((url) => url !== null); // Filter out null values from invalid URLs
 }
 
 // Fetch the unsafe and potentially unsafe filter lists and generate regex
