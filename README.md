@@ -83,3 +83,5 @@ For questions or support, feel free to open an issue on [GitHub](https://github.
 
 # 📜 Credits
 - [FMHY Filterlist](https://github.com/fmhy/FMHYFilterlist), the service used to detect unsafe/potentially unsafe sites, created by FMHY
+- [FMHY Bookmarks](https://github.com/fmhy/bookmarks), the service used to detect starred sites, created by FMHY
+- [FMHY API](https://api.fmhy.net/single-page), the service used to detect safe sites, created by FMHY
