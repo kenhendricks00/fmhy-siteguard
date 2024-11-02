@@ -28,9 +28,13 @@ function extractUrlsFromBookmarks(html) {
   return urls;
 }
 
-// Helper function to normalize URLs (removes trailing slashes, query parameters, and fragments)
+// Helper function to normalize URLs (adds protocol if missing, removes trailing slashes, query parameters, and fragments)
 function normalizeUrl(url) {
   try {
+    // Check if the URL starts with "http" or "https", if not, prepend "https://"
+    if (!/^https?:\/\//i.test(url)) {
+      url = `https://${url}`;
+    }
     const urlObj = new URL(url);
     urlObj.search = ""; // Remove query parameters
     urlObj.hash = ""; // Remove fragments
@@ -61,7 +65,7 @@ function extractUrlsFromFilterList(text) {
   return text
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith("!")) // Ignore comments and empty lines
+    .filter((line) => line && !line.startsWith("!")) // Ignore comments
     .map((line) => normalizeUrl(line))
     .filter((url) => url !== null); // Filter out null values from invalid URLs
 }
