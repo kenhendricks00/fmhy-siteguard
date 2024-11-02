@@ -9,7 +9,7 @@ const starredListURL =
 let unsafeSitesRegex = null;
 let potentiallyUnsafeSitesRegex = null;
 let safeSites = [];
-let starredSites = ["https://fmhy.net"];
+let starredSites = ["https://fmhy.net", "https://fmhy.pages.dev"];
 
 // Helper function to extract URLs from markdown text
 function extractUrlsFromMarkdown(markdown) {
@@ -148,6 +148,11 @@ async function fetchStarredSites() {
       // Ensure fmhy.net is always in the starred list
       if (!starredSites.includes("https://fmhy.net")) {
         starredSites.push("https://fmhy.net");
+      }
+
+      // Ensure fmhy.pages.dev is always in the starred list
+      if (!starredSites.includes("https://fmhy.pages.dev")) {
+        starredSites.push("https://fmhy.pages.dev");
       }
 
       console.log("Parsed Starred Sites:", starredSites);
