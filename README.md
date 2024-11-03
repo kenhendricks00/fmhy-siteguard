@@ -85,3 +85,5 @@ For questions or support, feel free to open an issue on [GitHub](https://github.
 - [FMHY Filterlist](https://github.com/fmhy/FMHYFilterlist), the service used to detect unsafe/potentially unsafe sites, created by FMHY
 - [FMHY Bookmarks](https://github.com/fmhy/bookmarks), the service used to detect starred sites, created by FMHY
 - [FMHY API](https://api.fmhy.net/single-page), the service used to detect safe sites, created by FMHY
+- [FMHY Related Sites/Projects List](https://github.com/fmhy/FMHY-SafeGuard/blob/main/fmhy-filterlist.txt), the service used to detect FMHY related sites/projects, created by FMHY
+- [Kenneth Hendricks](https://github.com/kenhendricks00), the original creator of the FMHY SafeGuard Extension
