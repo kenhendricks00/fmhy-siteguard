@@ -11,7 +11,11 @@ const approvedUrls = new Map(); // Map to store approved URLs per tab
 let unsafeSitesRegex = null;
 let potentiallyUnsafeSitesRegex = null;
 let safeSites = [];
-let starredSites = ["https://fmhy.net", "https://fmhy.pages.dev"];
+let starredSites = [
+  "https://fmhy.net",
+  "https://fmhy.pages.dev",
+  "https://fmhy.lol",
+];
 
 // Helper function to extract URLs from markdown text
 function extractUrlsFromMarkdown(markdown) {
@@ -169,6 +173,11 @@ async function fetchStarredSites() {
       // Ensure fmhy.pages.dev is always in the starred list
       if (!starredSites.includes("https://fmhy.pages.dev")) {
         starredSites.push("https://fmhy.pages.dev");
+      }
+
+      // Ensure fmhy.lol is always in the starred list
+      if (!starredSites.includes("https://fmhy.lol")) {
+        starredSites.push("https://fmhy.lol");
       }
 
       console.log("Parsed Starred Sites:", starredSites);
