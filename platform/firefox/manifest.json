@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "FMHY SafeGuard",
     "author": "Kenneth Hendricks & contributors",
-    "version": "1.1.2",
+    "version": "1.1.3",
     "icons": {
         "128": "res/ext_icon_144.png"
     },
@@ -12,9 +12,11 @@
       },
       "default_popup": "pub/index.html"
     },
+    "options_page": "pub/settings-page.html",
     "permissions": [
         "storage",
-        "tabs"
+        "tabs",
+        "alarms"
     ],
     "background": {
         "scripts": ["js/background.js"]
