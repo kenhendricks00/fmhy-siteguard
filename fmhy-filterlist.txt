@@ -9,7 +9,7 @@ github.com/fmhy/FMHYFilterlist
 github.com/fmhy/mix
 github.com/fmhy/bookmarks
 github.com/fmhy/bot
-github.com/kenhendricks00/FMHY-SafeGuard
+github.com/fmhy/FMHY-SafeGuard
 addons.mozilla.org/en-US/firefox/addon/fmhy-safeguard
 chromewebstore.google.com/detail/fmhy-safeguard/ihcppnlmkfeclmehgdhjkglkbmiemnmp
 reddit.com/r/FREEMEDIAHECKYEAH
