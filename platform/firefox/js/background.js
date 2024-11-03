@@ -7,7 +7,7 @@ const safeListURL = "https://api.fmhy.net/single-page";
 const starredListURL =
   "https://raw.githubusercontent.com/fmhy/bookmarks/refs/heads/main/fmhy_in_bookmarks_starred_only.html";
 const fmhyFilterListURL =
-  "https://raw.githubusercontent.com/kenhendricks00/FMHY-SafeGuard/refs/heads/main/fmhy-filterlist.txt";
+  "https://raw.githubusercontent.com/fmhy/FMHY-SafeGuard/refs/heads/main/fmhy-filterlist.txt";
 const DEFAULT_CHECK_INTERVAL = 60 * 60 * 1000; // 1 hour in milliseconds
 
 // State Variables
