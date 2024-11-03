@@ -19,6 +19,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     return `${urlObj.protocol}//${urlObj.hostname}`;
   }
 
+  // Function to apply theme based on settings
+  async function applyTheme() {
+    try {
+      const { theme } = await browser.storage.sync.get("theme");
+
+      if (theme === "dark") {
+        document.body.setAttribute("data-theme", "dark");
+      } else if (theme === "light") {
+        document.body.setAttribute("data-theme", "light");
+      } else {
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches;
+        document.body.setAttribute(
+          "data-theme",
+          prefersDark ? "dark" : "light"
+        );
+      }
+    } catch (error) {
+      console.error("Error applying theme:", error);
+    }
+  }
+
+  // Apply theme on load
+  await applyTheme();
+
   try {
     // Get the active tab's URL
     const [activeTab] = await browser.tabs.query({
@@ -88,6 +114,12 @@ document.addEventListener("DOMContentLoaded", async () => {
           `${displayUrl} is <strong>potentially unsafe</strong>. Proceed with caution.`
         );
         break;
+      case "fmhy":
+        updateUI(
+          "fmhy",
+          `${displayUrl} is an <strong>FMHY</strong> related site. Proceed confidently.`
+        );
+        break;
       case "safe":
         updateUI("safe", `${displayUrl} is <strong>safe</strong> to browse.`);
         break;
@@ -120,6 +152,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const icons = {
       unsafe: "../res/icons/unsafe.png",
       potentially_unsafe: "../res/icons/potentially_unsafe.png",
+      fmhy: "../res/icons/fmhy.png",
       safe: "../res/icons/safe.png",
       starred: "../res/icons/starred.png",
       no_data: "../res/ext_icon_144.png",
@@ -137,4 +170,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     console.log(`UI updated: ${message}`);
   }
+
+  // Add settings button functionality
+  document.getElementById("settingsButton").addEventListener("click", () => {
+    // Open the settings page in a new tab
+    browser.runtime.openOptionsPage();
+  });
 });
