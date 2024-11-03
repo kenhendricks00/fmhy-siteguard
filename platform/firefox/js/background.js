@@ -5,6 +5,8 @@ const filterListURLPotentiallyUnsafe =
 const safeListURL = "https://api.fmhy.net/single-page";
 const starredListURL =
   "https://raw.githubusercontent.com/fmhy/bookmarks/refs/heads/main/fmhy_in_bookmarks_starred_only.html";
+const proceedTabs = {};
+const approvedUrls = new Map(); // Map to store approved URLs per tab
 
 let unsafeSitesRegex = null;
 let potentiallyUnsafeSitesRegex = null;
@@ -30,6 +32,11 @@ function extractUrlsFromBookmarks(html) {
 
 // Helper function to normalize URLs (adds protocol if missing, removes trailing slashes, query parameters, and fragments)
 function normalizeUrl(url) {
+  if (!url) {
+    console.warn("Received null or undefined URL.");
+    return null;
+  }
+
   try {
     // Check if the URL starts with "http" or "https", if not, prepend "https://"
     if (!/^https?:\/\//i.test(url)) {
@@ -47,8 +54,18 @@ function normalizeUrl(url) {
 
 // Helper function to extract root domain from URL
 function extractRootUrl(url) {
-  const urlObj = new URL(url);
-  return `${urlObj.protocol}//${urlObj.hostname}`; // Extract protocol and hostname
+  if (!url) {
+    console.warn("Received null or undefined URL for root extraction.");
+    return null;
+  }
+
+  try {
+    const urlObj = new URL(url);
+    return `${urlObj.protocol}//${urlObj.hostname}`; // Extract protocol and hostname
+  } catch (error) {
+    console.warn(`Failed to extract root URL from: ${url}`);
+    return null;
+  }
 }
 
 // Function to generate a regex from a list of domains/URLs
@@ -185,11 +202,11 @@ function updatePageAction(status, tabId) {
     },
     default: {
       19: "../res/icons/default_19.png",
-      38: "../res/icons/default_38.png", // fallback to a known good icon
+      38: "../res/icons/default_38.png", // Fallback to a known good icon
     },
   };
 
-  let icon = icons[status] || icons["default"];
+  let icon = icons[status] || icons["default"]; // Fallback to default icon
 
   // Set the icon for the current tab with different sizes
   browser.action.setIcon(
@@ -211,6 +228,20 @@ function updatePageAction(status, tabId) {
 // Listen for messages from the popup to check site status
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("Received message in background for site:", message.url);
+
+  if (message.action === "proceedAnyway") {
+    const tabId = sender.tab ? sender.tab.id : message.tabId;
+    if (tabId) {
+      browser.storage.local.set({ [`proceedTab_${tabId}`]: true }, () => {
+        console.log(`Proceed flag set for tab ${tabId}`);
+        sendResponse({ status: "ok" });
+      });
+    } else {
+      console.warn("No tab ID found for proceedAnyway action.");
+      sendResponse({ status: "error", message: "No tab ID" });
+    }
+    return true; // Asynchronous message handling
+  }
 
   if (message.action === "checkSiteStatus") {
     const normalizedUrl = normalizeUrl(message.url.trim());
@@ -247,13 +278,43 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
-// Check the site status using regex for unsafe/potentially unsafe and arrays for safe/starred
-function checkSiteAndUpdatePageAction(tabId, url) {
-  if (!url) return;
+function openWarningPage(tabId, unsafeUrl) {
+  // Check if this URL was already approved for this tab
+  const tabApprovedUrls = approvedUrls.get(tabId) || [];
+  if (tabApprovedUrls.includes(normalizeUrl(unsafeUrl))) {
+    console.log(`URL ${unsafeUrl} was already approved for tab ${tabId}`);
+    return; // Skip warning page if URL was approved
+  }
 
+  const warningPageUrl = browser.runtime.getURL(
+    `../pub/warning-page.html?url=${encodeURIComponent(unsafeUrl)}`
+  );
+  browser.tabs.update(tabId, { url: warningPageUrl });
+}
+
+// Check and update site status, skip warning if proceed flag is set
+// Modified checkSiteAndUpdatePageAction function
+function checkSiteAndUpdatePageAction(tabId, url) {
+  if (!url) {
+    console.error(`Received null or undefined URL for tab ${tabId}`);
+    updatePageAction("default", tabId);
+    return;
+  }
+
+  console.log(`Checking site status for tab ${tabId}: ${url}`);
   const normalizedUrl = normalizeUrl(url.trim());
-  const rootUrl = normalizeUrl(extractRootUrl(url.trim()));
-  console.log("Checking site status for:", normalizedUrl, "TabId:", tabId);
+  if (!normalizedUrl) {
+    console.error(`Failed to normalize URL for tab ${tabId}: ${url}`);
+    updatePageAction("default", tabId);
+    return;
+  }
+
+  const rootUrl = extractRootUrl(normalizedUrl);
+  if (!rootUrl) {
+    console.error(`Failed to extract root URL for tab ${tabId}: ${url}`);
+    updatePageAction("default", tabId);
+    return;
+  }
 
   let isUnsafe =
     unsafeSitesRegex?.test(rootUrl) || unsafeSitesRegex?.test(normalizedUrl);
@@ -264,23 +325,86 @@ function checkSiteAndUpdatePageAction(tabId, url) {
     starredSites.includes(rootUrl) || starredSites.includes(normalizedUrl);
   let isSafe = safeSites.includes(rootUrl) || safeSites.includes(normalizedUrl);
 
-  if (isStarred) {
+  // Check if this URL was already approved for this tab
+  const tabApprovedUrls = approvedUrls.get(tabId) || [];
+  const isApproved = tabApprovedUrls.includes(normalizedUrl);
+
+  if (isUnsafe) {
+    if (isApproved) {
+      console.log(`Tab ${tabId} has approved unsafe URL. Skipping warning.`);
+      updatePageAction("unsafe", tabId);
+    } else {
+      console.log(`Tab ${tabId} is unsafe. Triggering warning page.`);
+      updatePageAction("unsafe", tabId);
+      openWarningPage(tabId, url);
+    }
+  } else if (isPotentiallyUnsafe) {
+    console.log(`Tab ${tabId} is potentially unsafe.`);
+    updatePageAction("potentially_unsafe", tabId);
+  } else if (isStarred) {
+    console.log(`Tab ${tabId} is a starred site.`);
     updatePageAction("starred", tabId);
   } else if (isSafe) {
+    console.log(`Tab ${tabId} is a safe site.`);
     updatePageAction("safe", tabId);
-  } else if (isUnsafe) {
-    updatePageAction("unsafe", tabId);
-  } else if (isPotentiallyUnsafe) {
-    updatePageAction("potentially_unsafe", tabId);
   } else {
+    console.log(`Tab ${tabId} has no data. Using default icon.`);
     updatePageAction("default", tabId);
   }
 }
 
+// Clean up approved URLs when tab is closed
+browser.tabs.onRemoved.addListener((tabId) => {
+  approvedUrls.delete(tabId);
+  browser.storage.local.remove(`proceedTab_${tabId}`, () => {
+    console.log(`Proceed flag and approved URLs removed for tab ${tabId}`);
+  });
+});
+
+// Modified runtime message listener for proceedAnyway
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "proceedAnyway") {
+    const tabId = sender.tab ? sender.tab.id : message.tabId;
+    if (tabId) {
+      // Get the URL from the warning page's query parameters
+      const url = new URL(sender.tab.url).searchParams.get("url");
+      if (url) {
+        // Add the URL to the approved list for this tab
+        const normalizedUrl = normalizeUrl(url);
+        const tabApprovedUrls = approvedUrls.get(tabId) || [];
+        if (!tabApprovedUrls.includes(normalizedUrl)) {
+          tabApprovedUrls.push(normalizedUrl);
+          approvedUrls.set(tabId, tabApprovedUrls);
+        }
+      }
+
+      browser.storage.local.set({ [`proceedTab_${tabId}`]: true }, () => {
+        console.log(`Proceed flag set for tab ${tabId}`);
+        sendResponse({ status: "ok" });
+      });
+    } else {
+      console.warn("No tab ID found for proceedAnyway action.");
+      sendResponse({ status: "error", message: "No tab ID" });
+    }
+    return true;
+  }
+});
+
+// Listen for tab updates and check site status
+browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === "loading" && tab.url) {
+    checkSiteAndUpdatePageAction(tabId, tab.url);
+  }
+});
+
 // Listen for tab updates
 browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === "complete" && tab.url) {
+    console.log(`Tab updated: ${tab.url}`);
     checkSiteAndUpdatePageAction(tabId, tab.url);
+  } else if (changeInfo.status === "loading" && !tab.url) {
+    console.log(`Tab loading with no URL: setting default icon`);
+    updatePageAction("default", tabId);
   }
 });
 
@@ -288,8 +412,19 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 browser.tabs.onActivated.addListener((activeInfo) => {
   browser.tabs.get(activeInfo.tabId, (tab) => {
     if (tab.url) {
+      console.log(`Tab activated: ${tab.url}`);
       checkSiteAndUpdatePageAction(tab.id, tab.url);
+    } else {
+      console.log(`Tab activated with no URL: default icon`);
+      updatePageAction("default", tab.id); // Use default icon for tabs without a URL
     }
+  });
+});
+
+// Clean up the proceed flag when the tab is closed
+browser.tabs.onRemoved.addListener((tabId) => {
+  browser.storage.local.remove(`proceedTab_${tabId}`, () => {
+    console.log(`Proceed flag removed for tab ${tabId}`);
   });
 });
 
@@ -298,7 +433,6 @@ async function initializeExtension() {
   await fetchFilterLists();
   await fetchSafeSites();
   await fetchStarredSites();
-
   console.log("Extension initialized successfully.");
 }
 
