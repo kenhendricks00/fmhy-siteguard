@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - 'v*.*.*'
-  workflow_dispatch:  # This allows manual triggering from GitHub UI
+  workflow_dispatch:  # Allows manual triggering from GitHub UI
 
 permissions:
   contents: write  # Required to write contents and create releases
@@ -27,7 +27,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y zip
+          sudo apt-get install -y zip jq
 
       # Step to get the version, or use a default if no tag exists (manual trigger)
       - name: Get Version from Tag or Default
@@ -47,9 +47,7 @@ jobs:
           VERSION=${{ env.VERSION }}
           echo "## Release $VERSION" > release_notes.md
           echo "" >> release_notes.md
-          # Use awk to extract release notes if a valid version is found
           if [[ "$VERSION" != "dev-version" ]]; then
-            # Escape special characters for awk and only extract if it's a tagged release
             awk "/^## \\[$VERSION\\]/, /^## \\[/" CHANGELOG.md >> release_notes.md || cat RELEASE.HEAD.md >> release_notes.md
           else
             echo "Manual run, no release notes extracted from CHANGELOG.md" >> release_notes.md
@@ -70,13 +68,22 @@ jobs:
 
       - name: Build Chrome Extension
         run: |
-          chmod +x tools/make-chromium.sh
-          tools/make-chromium.sh $VERSION
+          mkdir -p dist/chromium
+          cp -r src/* dist/chromium/
+          cp platform/chromium/manifest.json dist/chromium/manifest.json
+          cd dist/chromium
+          zip -r ../FMHY-SafeGuard_${{ env.VERSION }}.chromium.zip ./*
+          cd ../..
 
       - name: Build Firefox Extension
         run: |
-          chmod +x tools/make-firefox.sh
-          tools/make-firefox.sh $VERSION
+          mkdir -p dist/firefox
+          cp -r src/* dist/firefox/
+          cp platform/firefox/manifest.json dist/firefox/manifest.json
+          cd dist/firefox
+          zip -r ../FMHY-SafeGuard_${{ env.VERSION }}.firefox.zip ./*
+          cd ..
+          mv FMHY-SafeGuard_${{ env.VERSION }}.firefox.zip FMHY-SafeGuard_${{ env.VERSION }}.firefox.xpi
 
       - name: Upload Chrome Extension
         uses: actions/upload-release-asset@v1
@@ -84,7 +91,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/build/FMHY-SafeGuard_${{ env.VERSION }}.chromium.zip
+          asset_path: dist/FMHY-SafeGuard_${{ env.VERSION }}.chromium.zip
           asset_name: FMHY-SafeGuard_${{ env.VERSION }}.chromium.zip
           asset_content_type: application/zip
 
@@ -94,6 +101,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/build/FMHY-SafeGuard_${{ env.VERSION }}.firefox.xpi
+          asset_path: dist/FMHY-SafeGuard_${{ env.VERSION }}.firefox.xpi
           asset_name: FMHY-SafeGuard_${{ env.VERSION }}.firefox.xpi
           asset_content_type: application/x-xpinstall
