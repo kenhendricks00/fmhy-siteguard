@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to FMHY SafeGuard</title>
+    <link rel="icon" type="image/x-icon" href="../res/ext_icon_144.png" />
+    <style>
+      @font-face {
+        font-family: "Inter";
+        src: url("../res/fonts/inter.woff2") format("woff2");
+      }
+
+      :root {
+        --background: rgb(26, 26, 26);
+        --card-bg: rgba(255, 255, 255, 0.05);
+        --text-primary: #e8e8e8;
+        --text-secondary: #848a94;
+        --accent-purple: #c4b5fd;
+        --accent-blue: #7bc5e4;
+        --section-border: rgba(255, 255, 255, 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: var(--background);
+        font-family: "Inter", sans-serif;
+        color: var(--text-primary);
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      .welcome-header {
+        text-align: center;
+      }
+
+      .title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(
+          120deg,
+          var(--accent-purple) 30%,
+          var(--accent-blue)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+      }
+
+      .card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid var(--section-border);
+      }
+
+      .step {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+      }
+
+      .step:last-child {
+        margin-bottom: 0;
+      }
+
+      .step-number {
+        background: linear-gradient(
+          120deg,
+          var(--accent-purple),
+          var(--accent-blue)
+        );
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        flex-shrink: 0;
+      }
+
+      .step-content {
+        flex-grow: 1;
+      }
+
+      .step-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      .step-description {
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+      }
+
+      .status-list {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin: 1rem 0;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+      }
+
+      .status-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        min-width: fit-content;
+      }
+
+      .status-icon {
+        width: 19px;
+        height: 19px;
+        object-fit: contain;
+      }
+
+      /* Add responsive adjustments */
+      @media (max-width: 768px) {
+        .status-list {
+          gap: 1rem;
+          justify-content: flex-start;
+        }
+
+        .status-item {
+          font-size: 0.85rem;
+        }
+      }
+
+      .footer {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+      }
+
+      .footer a {
+        color: var(--accent-blue);
+        text-decoration: none;
+      }
+
+      .footer a:hover {
+        text-decoration: underline;
+      }
+      .btn {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        font-family: inherit;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        text-decoration: none;
+        transition: transform 0.2s, opacity 0.2s;
+        background: linear-gradient(
+          120deg,
+          var(--accent-purple),
+          var(--accent-blue)
+        );
+        color: white;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        opacity: 0.95;
+      }
+
+      .btn-container {
+        text-align: center;
+      }
+
+      .warning {
+        background: rgba(255, 107, 107, 0.1);
+        border: 1px solid rgba(255, 107, 107, 0.2);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+      }
+
+      .warning-title {
+        color: #ff6b6b;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      @media (max-width: 640px) {
+        .container {
+          padding: 1rem;
+        }
+
+        .title {
+          font-size: 2rem;
+        }
+
+        .step {
+          flex-direction: column;
+        }
+
+        .step-number {
+          margin-bottom: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="welcome-header">
+        <h1 class="title">Welcome to FMHY SafeGuard</h1>
+        <p class="subtitle">Let's get you set up to browse safely</p>
+      </div>
+
+      <div class="card">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h2 class="step-title">Pin Extension to Toolbar</h2>
+            <p class="step-description">
+              For quick access, pin FMHY SafeGuard to your browser toolbar:
+            </p>
+            <ol style="color: var(--text-secondary); margin-left: 1.5rem">
+              <li>
+                Click the extensions menu (puzzle piece icon) in your toolbar
+              </li>
+              <li>Find "FMHY SafeGuard" in the list</li>
+              <li>
+                Click the pin icon next to it or right-click it and select "Pin
+                to Toolbar"
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h2 class="step-title">How It Works</h2>
+            <p class="step-description">
+              FMHY SafeGuard automatically checks websites against our security
+              database:
+            </p>
+            <ul style="color: var(--text-secondary); margin-left: 1.5rem">
+              <li>🛡️ Blocks access to known unsafe sites</li>
+              <li>⚠️ Shows warnings for potentially unsafe sites</li>
+              <li>✅ Identifies trusted safe sites</li>
+            </ul>
+            <p class="step-description" style="margin-top: 1rem">
+              The extension icon color indicates the current site's status:
+            </p>
+            <div class="status-list">
+              <div class="status-item">
+                <img
+                  src="../res/icons/default_19.png"
+                  alt="Not in Wiki"
+                  class="status-icon"
+                />
+                <span>Not in Wiki</span>
+              </div>
+              <div class="status-item">
+                <img
+                  src="../res/icons/starred_19.png"
+                  alt="Starred"
+                  class="status-icon"
+                />
+                <span>Starred</span>
+              </div>
+              <div class="status-item">
+                <img
+                  src="../res/icons/safe_19.png"
+                  alt="Safe"
+                  class="status-icon"
+                />
+                <span>Safe</span>
+              </div>
+              <div class="status-item">
+                <img
+                  src="../res/icons/potentially_unsafe_19.png"
+                  alt="Potentially Unsafe"
+                  class="status-icon"
+                />
+                <span>Potentially Unsafe</span>
+              </div>
+              <div class="status-item">
+                <img
+                  src="../res/icons/unsafe_19.png"
+                  alt="Unsafe"
+                  class="status-icon"
+                />
+                <span>Unsafe</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h2 class="step-title">Customize Your Settings</h2>
+            <p class="step-description">
+              Configure the extension to work best for you:
+            </p>
+            <ul style="color: var(--text-secondary); margin-left: 1.5rem">
+              <li>Choose light or dark theme</li>
+              <li>Enable/disable warning pages</li>
+              <li>Set automatic update frequency</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-container">
+        <a href="settings-page.html" class="btn">Open Settings</a>
+      </div>
+
+      <div class="footer">
+        <p>FMHY SafeGuard</p>
+        <p>
+          Powered by
+          <a href="https://github.com/fmhy/FMHYFilterlist" target="_blank"
+            >FMHY Filterlist</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
