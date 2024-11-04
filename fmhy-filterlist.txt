@@ -2,6 +2,7 @@
 fmhy.net
 fmhy.lol
 fmhy.pages.dev
+fmhy.xyz
 github.com/fmhy
 github.com/fmhy/edit
 github.com/fmhy/FMHY
