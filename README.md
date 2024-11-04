@@ -70,7 +70,7 @@
 To start using FMHY SafeGuard, follow these steps:
 1. Download the extension from the [Releases page](https://github.com/fmhy/FMHY-SafeGuard/releases) or the [Firefox page](https://addons.mozilla.org/en-US/firefox/addon/fmhy-safeguard/)/[Chrome Page](https://chromewebstore.google.com/detail/fmhy-safeguard/ihcppnlmkfeclmehgdhjkglkbmiemnmp).
 2. Install it into your browser and start browsing securely.
-3. Customize the settings to your preferences via the extension’s pop-up (Coming soon!).
+3. Customize settings, such as theme, filtered site count, warning page toggles, and filter update frequency.
 
 # 💬 Support & Contributions
 
