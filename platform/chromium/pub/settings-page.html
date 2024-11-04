@@ -326,8 +326,8 @@
 
       select {
         appearance: none;
-        background: var(--card-bg);
-        border: 1px solid var(--section-border);
+        background: rgba(30, 30, 30, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 8px;
         padding: 0.5rem 2rem 0.5rem 1rem;
         font-family: inherit;
@@ -335,6 +335,51 @@
         color: var(--text-primary);
         cursor: pointer;
         min-width: 200px;
+      }
+
+      /* Dark theme specific select styling */
+      [data-theme="dark"] select {
+        background: rgba(30, 30, 30, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      [data-theme="dark"] select option {
+        background-color: rgb(30, 30, 30);
+        color: var(--text-primary);
+        padding: 8px 12px;
+      }
+
+      [data-theme="dark"] select option:checked,
+      [data-theme="dark"] select option:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Selected option styling */
+      [data-theme="dark"] select option:checked {
+        background: rgba(255, 255, 255, 0.15);
+        font-weight: 500;
+      }
+
+      /* Light theme specific select styling */
+      [data-theme="light"] select {
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      [data-theme="light"] select option {
+        background-color: #ffffff;
+        color: var(--text-primary);
+        padding: 8px 12px;
+      }
+
+      /* Hover and focus states */
+      select:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      select:focus {
+        outline: none;
+        border-color: var(--accent-blue);
       }
 
       .select-wrapper::after {
@@ -533,7 +578,7 @@
       </div>
 
       <div class="footer">
-        <p>FMHY SafeGuard v1.1.3</p>
+        <p>FMHY SafeGuard v1.1.4</p>
         <p>
           Powered by
           <a href="https://github.com/fmhy/FMHYFilterlist" target="_blank"
