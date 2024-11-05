@@ -1,8 +1,12 @@
 ! FMHY Sites/Related Projects
+
+! Domain + Backup Domains
 fmhy.net
 fmhy.lol
 fmhy.pages.dev
 fmhy.xyz
+
+! GitHub Projects
 github.com/fmhy
 github.com/fmhy/edit
 github.com/fmhy/FMHY
@@ -11,6 +15,18 @@ github.com/fmhy/mix
 github.com/fmhy/bookmarks
 github.com/fmhy/bot
 github.com/fmhy/FMHY-SafeGuard
+
+! Extensions 
 addons.mozilla.org/en-US/firefox/addon/fmhy-safeguard
 chromewebstore.google.com/detail/fmhy-safeguard/ihcppnlmkfeclmehgdhjkglkbmiemnmp
+
+! Social Media
 reddit.com/r/FREEMEDIAHECKYEAH
+bsky.app/profile/fmhy.net
+rentry.co/fmhy-invite
+
+! Search Tools
+fmhy-search.streamlit.app
+old.fmhy.net/search
+github.com/search?q=repo%3Afmhy%2FFMHY+&type=wikis
+gitlab.com/cevoj/fmhy-dupe-checker
