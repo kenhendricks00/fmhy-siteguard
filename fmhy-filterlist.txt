@@ -30,3 +30,4 @@ fmhy-search.streamlit.app
 old.fmhy.net/search
 github.com/search?q=repo%3Afmhy%2FFMHY+&type=wikis
 gitlab.com/cevoj/fmhy-dupe-checker
+https://api.fmhy.net/single-page
