@@ -1,7 +1,8 @@
 ! FMHY Sites/Related Projects
 
 ! Domain + Backup Domains
-*.fmhy.net
+fmhy.net
+pastes.fmhy.net
 fmhy.lol
 fmhy.pages.dev
 fmhy.xyz
@@ -14,6 +15,7 @@ github.com/fmhy/FMHYFilterlist
 github.com/fmhy/mix
 github.com/fmhy/bookmarks
 github.com/fmhy/bot
+github.com/taskyland/snowbin
 github.com/fmhy/FMHY-SafeGuard
 
 ! Extensions 
