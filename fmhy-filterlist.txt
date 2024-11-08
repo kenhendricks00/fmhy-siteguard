@@ -1,7 +1,7 @@
 ! FMHY Sites/Related Projects
 
 ! Domain + Backup Domains
-fmhy.net
+*.fmhy.net
 fmhy.lol
 fmhy.pages.dev
 fmhy.xyz
