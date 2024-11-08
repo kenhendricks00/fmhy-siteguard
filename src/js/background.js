@@ -195,6 +195,10 @@ function updatePageAction(status, tabId) {
       19: "../res/icons/fmhy_19.png",
       38: "../res/icons/fmhy_38.png",
     },
+    extension_page: {
+      19: "../res/ext_icon_144.png",
+      38: "../res/ext_icon_144.png",
+    },
     default: {
       19: "../res/icons/default_19.png",
       38: "../res/icons/default_38.png",
@@ -229,6 +233,17 @@ function checkSiteAndUpdatePageAction(tabId, url) {
 
   const normalizedUrl = normalizeUrl(url.trim());
   const rootUrl = extractRootUrl(normalizedUrl);
+
+  // Check if URL is an extension page
+  const isExtensionPage =
+    url.includes(browserAPI.runtime.getURL("pub/warning-page.html")) ||
+    url.includes(browserAPI.runtime.getURL("pub/settings-page.html")) ||
+    url.includes(browserAPI.runtime.getURL("pub/welcome-page.html"));
+
+  if (isExtensionPage) {
+    updatePageAction("extension_page", tabId);
+    return;
+  }
 
   const isUnsafe =
     unsafeSitesRegex?.test(rootUrl) || unsafeSitesRegex?.test(normalizedUrl);
