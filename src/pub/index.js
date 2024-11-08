@@ -5,51 +5,31 @@ document.addEventListener("DOMContentLoaded", async () => {
   const statusMessage = document.getElementById("status-message");
   const errorMessage = document.getElementById("error-message");
 
-  // Cross-browser compatibility shim
   const browserAPI = typeof browser !== "undefined" ? browser : chrome;
 
-  // Helper function to normalize URLs (removes trailing slashes, query parameters, and fragments)
-  const normalizeUrl = (url) => {
-    const urlObj = new URL(url);
-    urlObj.search = ""; // Remove query parameters
-    urlObj.hash = ""; // Remove fragments
-    return urlObj.href.replace(/\/+$/, ""); // Remove trailing slash only
-  };
+  // URLs of known extension pages
+  const warningPageUrl = browserAPI.runtime.getURL("pub/warning-page.html");
+  const settingsPageUrl = browserAPI.runtime.getURL("pub/settings-page.html");
+  const welcomePageUrl = browserAPI.runtime.getURL("pub/welcome-page.html");
 
-  // Helper function to extract the root domain from a URL
-  function extractRootDomain(url) {
-    let urlObj = new URL(url);
-    return `${urlObj.protocol}//${urlObj.hostname}`;
-  }
-
-  // Function to apply theme based on settings
+  // Apply theme based on settings
   async function applyTheme() {
     try {
       const { theme } = await browserAPI.storage.sync.get("theme");
-
-      if (theme === "dark") {
-        document.body.setAttribute("data-theme", "dark");
-      } else if (theme === "light") {
-        document.body.setAttribute("data-theme", "light");
-      } else {
-        const prefersDark = window.matchMedia(
-          "(prefers-color-scheme: dark)"
-        ).matches;
-        document.body.setAttribute(
-          "data-theme",
-          prefersDark ? "dark" : "light"
-        );
-      }
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)"
+      ).matches;
+      document.body.setAttribute(
+        "data-theme",
+        theme || (prefersDark ? "dark" : "light")
+      );
     } catch (error) {
       console.error("Error applying theme:", error);
     }
   }
-
-  // Apply theme on load
   await applyTheme();
 
   try {
-    // Get the active tab's URL
     const [activeTab] = await browserAPI.tabs.query({
       active: true,
       currentWindow: true,
@@ -59,9 +39,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       throw new Error("No active tab found or URL is unavailable.");
     }
 
-    const currentUrl = normalizeUrl(activeTab.url);
-    const rootDomain = extractRootDomain(currentUrl);
-    console.log(`Active tab URL: ${currentUrl}, Root domain: ${rootDomain}`);
+    const currentUrl = activeTab.url;
+
+    // Check if the URL is an extension page by checking if it starts with known extension page URLs
+    if (
+      currentUrl.startsWith(warningPageUrl) ||
+      currentUrl === settingsPageUrl ||
+      currentUrl === welcomePageUrl
+    ) {
+      handleStatusUpdate("extension_page", currentUrl);
+      return; // Skip further processing since it's an internal page
+    }
 
     // Send a message to the background script to check the site's status
     const response = await browserAPI.runtime.sendMessage({
@@ -75,23 +63,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       );
     }
 
-    // Determine if the root domain or the full URL is marked as safe/starred
-    const isRootDomainMarked = await browserAPI.runtime.sendMessage({
-      action: "checkSiteStatus",
-      url: rootDomain,
-    });
-
-    // Handle different site statuses and update the UI accordingly
-    if (
-      isRootDomainMarked.status === response.status &&
-      response.status !== "no_data"
-    ) {
-      // If both the root domain and the current URL share the same status, show the root domain in the message
-      handleStatusUpdate(response.status, rootDomain);
-    } else {
-      // Otherwise, show the current URL in the message
-      handleStatusUpdate(response.status, currentUrl);
-    }
+    handleStatusUpdate(response.status, currentUrl);
   } catch (error) {
     console.error("Error while checking site status:", error);
     errorMessage.textContent = `Error: ${error.message}`;
@@ -104,46 +76,47 @@ document.addEventListener("DOMContentLoaded", async () => {
    * @param {string} displayUrl - The URL or root domain to display in the message
    */
   function handleStatusUpdate(status, displayUrl) {
+    let message;
+
     switch (status) {
       case "unsafe":
-        updateUI(
-          "unsafe",
-          `${displayUrl} is flagged as <strong>unsafe</strong>. Be cautious when interacting with this site.`
-        );
+        message = `${displayUrl} is flagged as <strong>unsafe</strong>. Be cautious when interacting with this site.`;
         break;
       case "potentially_unsafe":
-        updateUI(
-          "potentially_unsafe",
-          `${displayUrl} is <strong>potentially unsafe</strong>. Proceed with caution.`
-        );
+        message = `${displayUrl} is <strong>potentially unsafe</strong>. Proceed with caution.`;
         break;
       case "fmhy":
-        updateUI(
-          "fmhy",
-          `${displayUrl} is an <strong>FMHY</strong> related site. Proceed confidently.`
-        );
+        message = `${displayUrl} is an <strong>FMHY</strong> related site. Proceed confidently.`;
         break;
       case "safe":
-        updateUI("safe", `${displayUrl} is <strong>safe</strong> to browse.`);
+        message = `${displayUrl} is <strong>safe</strong> to browse.`;
         break;
       case "starred":
-        updateUI(
-          "starred",
-          `${displayUrl} is a <strong>starred</strong> site.`
-        );
+        message = `${displayUrl} is a <strong>starred</strong> site.`;
+        break;
+      case "extension_page":
+        // Set specific messages for each known extension page
+        if (displayUrl.startsWith(warningPageUrl)) {
+          message =
+            "You are on the <strong>Warning Page</strong>. This page warns you about potentially unsafe sites.";
+        } else if (displayUrl === settingsPageUrl) {
+          message =
+            "This is the <strong>Settings Page</strong> of the extension. Customize your preferences here.";
+        } else if (displayUrl === welcomePageUrl) {
+          message =
+            "Welcome to <strong>FMHY SafeGuard</strong>! Explore the extension's features and get started.";
+        } else {
+          message = "This is an <strong>extension page</strong>.";
+        }
         break;
       case "no_data":
-        updateUI(
-          "no_data",
-          `No data available for <strong>${displayUrl}</strong>.`
-        );
+        message = `No data available for <strong>${displayUrl}</strong>.`;
         break;
       default:
-        updateUI(
-          "unknown",
-          `An unknown status was received for <strong>${displayUrl}</strong>.`
-        );
+        message = `An unknown status was received for <strong>${displayUrl}</strong>.`;
     }
+
+    updateUI(status, message);
   }
 
   /**
@@ -158,6 +131,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       fmhy: "../res/icons/fmhy.png",
       safe: "../res/icons/safe.png",
       starred: "../res/icons/starred.png",
+      extension_page: "../res/ext_icon_144.png",
       no_data: "../res/ext_icon_144.png",
       error: "../res/icons/error.png",
       unknown: "../res/ext_icon_144.png",
