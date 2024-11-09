@@ -350,12 +350,16 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function openWarningPage(tabId, unsafeUrl) {
+  const normalizedUrl = normalizeUrl(unsafeUrl);
   const tabApprovedUrls = approvedUrls.get(tabId) || [];
-  if (tabApprovedUrls.includes(normalizeUrl(unsafeUrl))) {
+
+  // Check if URL has already been approved for this tab
+  if (tabApprovedUrls.includes(normalizedUrl)) {
     console.log(`URL ${unsafeUrl} was already approved for tab ${tabId}`);
     return;
   }
 
+  // Fetch the warning page setting
   const { warningPage } = await browserAPI.storage.sync.get({
     warningPage: true,
   });
@@ -365,11 +369,48 @@ async function openWarningPage(tabId, unsafeUrl) {
     return;
   }
 
+  // Redirect to the warning page if it is enabled in settings
   const warningPageUrl = browserAPI.runtime.getURL(
     `../pub/warning-page.html?url=${encodeURIComponent(unsafeUrl)}`
   );
   browserAPI.tabs.update(tabId, { url: warningPageUrl });
 }
+
+// Add listener for approval from the warning page
+browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "approveSite") {
+    const { tabId, url } = message;
+    const normalizedUrl = normalizeUrl(url);
+
+    // Store approval for this URL in the current tab
+    if (tabId && normalizedUrl) {
+      let tabApprovedUrls = approvedUrls.get(tabId) || [];
+      if (!tabApprovedUrls.includes(normalizedUrl)) {
+        tabApprovedUrls.push(normalizedUrl);
+        approvedUrls.set(tabId, tabApprovedUrls);
+      }
+      console.log(`Approval stored for ${url} in tab ${tabId}`);
+      sendResponse({ status: "approved" });
+    }
+  }
+  return true; // Indicates asynchronous response handling
+});
+
+// Listen for settings updates from the settings page
+browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "settingsUpdated") {
+    console.log(
+      "Received settingsUpdated message in background script:",
+      message.settings
+    );
+
+    // Acknowledge the message by sending a response
+    sendResponse({ status: "Settings updated successfully" });
+
+    // Return true to indicate that the response will be sent asynchronously
+    return true;
+  }
+});
 
 browserAPI.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === "complete" && tab.url) {

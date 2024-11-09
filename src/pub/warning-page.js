@@ -7,27 +7,37 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("unsafeUrl").textContent = unsafeUrl;
   console.log(`Warning page loaded for URL: ${unsafeUrl}`);
 
+  // "Go Back" button functionality to return to the previous page
   document.getElementById("goBack").addEventListener("click", () => {
     console.log("User clicked Go Back.");
     // Go back twice to skip over the warning page
     window.history.go(-2);
   });
 
+  // "Proceed" button functionality to continue to the unsafe URL
   document.getElementById("proceed").addEventListener("click", async () => {
     if (confirm("Are you sure you want to proceed? This site may be unsafe.")) {
-      const [tab] = await browserAPI.tabs.query({
+      const [currentTab] = await browserAPI.tabs.query({
         active: true,
         currentWindow: true,
       });
 
-      console.log(`Sending proceedAnyway message for tab ${tab.id}`);
-      await browserAPI.runtime.sendMessage({
-        action: "proceedAnyway",
-        tabId: tab.id,
-      });
+      if (currentTab && currentTab.id) {
+        console.log(
+          `Sending approveSite message for tab ${currentTab.id} and URL ${unsafeUrl}`
+        );
 
-      console.log("Proceed flag set, navigating to unsafe URL...");
-      await browserAPI.tabs.update(tab.id, { url: unsafeUrl });
+        // Send approval message to the background script
+        await browserAPI.runtime.sendMessage({
+          action: "approveSite",
+          tabId: currentTab.id,
+          url: unsafeUrl,
+        });
+
+        console.log("Approval stored, navigating to the unsafe URL...");
+        // Redirect to the approved unsafe URL
+        await browserAPI.tabs.update(currentTab.id, { url: unsafeUrl });
+      }
     }
   });
 });
