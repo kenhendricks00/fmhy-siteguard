@@ -50,7 +50,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       handleStatusUpdate("extension_page", currentUrl);
       return; // Skip further processing since it's an internal page
     }
-
+    
+    // Check if the URL is a chrome page
+    if (
+      currentUrl.startsWith("chrome://")
+    ) {
+      handleStatusUpdate("chrome_page", currentUrl);
+      return; // Skip further processing since it's an internal page
+    }
+    
     // Send a message to the background script to check the site's status
     const response = await browserAPI.runtime.sendMessage({
       action: "checkSiteStatus",
@@ -112,6 +120,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       case "no_data":
         message = `No data available for <strong>${displayUrl}</strong>.`;
         break;
+      case "chrome_page":
+        message =
+          "You are on a <strong>chrome page</strong>. This page is managed by your browser.";
       default:
         message = `An unknown status was received for <strong>${displayUrl}</strong>.`;
     }
@@ -132,6 +143,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       safe: "../res/icons/safe.png",
       starred: "../res/icons/starred.png",
       extension_page: "../res/ext_icon_144.png",
+      chrome_page: "../res/ext_icon_144.png",
       no_data: "../res/ext_icon_144.png",
       error: "../res/icons/error.png",
       unknown: "../res/ext_icon_144.png",
