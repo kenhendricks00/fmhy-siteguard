@@ -11,7 +11,6 @@ const starredListURL =
   "https://raw.githubusercontent.com/fmhy/bookmarks/refs/heads/main/fmhy_in_bookmarks_starred_only.html";
 const fmhyFilterListURL =
   "https://raw.githubusercontent.com/fmhy/FMHY-SafeGuard/refs/heads/main/fmhy-filterlist.txt";
-const DEFAULT_CHECK_INTERVAL = 60 * 60 * 1000; // 1 hour in milliseconds
 
 // State Variables
 let unsafeSitesRegex = null;
@@ -42,7 +41,6 @@ function normalizeUrl(url) {
     console.warn("Received null or undefined URL.");
     return null;
   }
-
   try {
     if (!/^https?:\/\//i.test(url)) {
       url = `https://${url}`;
@@ -62,7 +60,6 @@ function extractRootUrl(url) {
     console.warn("Received null or undefined URL for root extraction.");
     return null;
   }
-
   try {
     const urlObj = new URL(url);
     return `${urlObj.protocol}//${urlObj.hostname}`;
@@ -124,6 +121,9 @@ async function fetchFilterLists() {
     }
 
     await browserAPI.storage.local.set({
+      unsafeSites,
+      potentiallyUnsafeSites,
+      fmhySites,
       unsafeFilterCount: unsafeSites.length,
       potentiallyUnsafeFilterCount: potentiallyUnsafeSites.length,
       fmhyFilterCount: fmhySites.length,
@@ -131,7 +131,6 @@ async function fetchFilterLists() {
     });
 
     console.log("Stored FMHY filter count:", fmhySites.length);
-
     notifySettingsPage();
   } catch (error) {
     console.error("Error fetching filter lists:", error);
@@ -148,6 +147,7 @@ async function fetchSafeSites() {
       safeSites = [...new Set(urls.map((url) => normalizeUrl(url.trim())))];
 
       await browserAPI.storage.local.set({
+        safeSites,
         safeSiteCount: safeSites.length,
       });
 
@@ -169,6 +169,45 @@ async function fetchStarredSites() {
     }
   } catch (error) {
     console.error("Error fetching starred sites:", error);
+  }
+}
+
+// Fetch all lists based on frequency
+async function fetchAllLists() {
+  console.log("Fetching all lists...");
+  try {
+    const { lastFetched } = await browserAPI.storage.local.get("lastFetched");
+    const { updateFrequency } = await browserAPI.storage.sync.get({
+      updateFrequency: "daily",
+    });
+
+    const now = new Date();
+    const lastFetchDate = lastFetched ? new Date(lastFetched) : null;
+    const diffHours = lastFetchDate
+      ? (now - lastFetchDate) / (1000 * 60 * 60)
+      : Infinity;
+
+    const hoursThreshold =
+      {
+        daily: 24,
+        weekly: 168,
+        monthly: 720,
+      }[updateFrequency] || 24;
+
+    if (diffHours < hoursThreshold) {
+      console.log("Update frequency threshold not met. Skipping fetch.");
+      return;
+    }
+
+    await Promise.all([
+      fetchFilterLists(),
+      fetchSafeSites(),
+      fetchStarredSites(),
+    ]);
+    await browserAPI.storage.local.set({ lastFetched: now.toISOString() });
+    console.log("All lists fetched and lastFetched timestamp updated.");
+  } catch (error) {
+    console.error("Error fetching all lists:", error);
   }
 }
 
@@ -234,7 +273,6 @@ function checkSiteAndUpdatePageAction(tabId, url) {
   const normalizedUrl = normalizeUrl(url.trim());
   const rootUrl = extractRootUrl(normalizedUrl);
 
-  // Check if URL is an extension page
   const isExtensionPage =
     url.includes(browserAPI.runtime.getURL("pub/warning-page.html")) ||
     url.includes(browserAPI.runtime.getURL("pub/settings-page.html")) ||
@@ -277,40 +315,50 @@ function checkSiteAndUpdatePageAction(tabId, url) {
 }
 
 // Update Schedule Management
-async function shouldUpdate() {
-  try {
-    const { lastUpdated } = await browserAPI.storage.local.get("lastUpdated");
-    const { updateFrequency } = await browserAPI.storage.sync.get({
-      updateFrequency: "daily",
-    });
-
-    if (!lastUpdated) return true;
-
-    const lastUpdate = new Date(lastUpdated);
-    const now = new Date();
-    const diffHours = (now - lastUpdate) / (1000 * 60 * 60);
-
-    switch (updateFrequency) {
-      case "daily":
-        return diffHours >= 24;
-      case "weekly":
-        return diffHours >= 168;
-      case "monthly":
-        return diffHours >= 720;
-      default:
-        return false;
-    }
-  } catch (error) {
-    console.error("Error checking update schedule:", error);
-    return false;
-  }
-}
-
 async function setupUpdateSchedule() {
   await browserAPI.alarms.clearAll();
-  browserAPI.alarms.create("checkUpdate", {
-    periodInMinutes: 60,
-  });
+  browserAPI.alarms.create("checkUpdate", { periodInMinutes: 60 });
+}
+
+browserAPI.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === "checkUpdate") {
+    await fetchAllLists();
+  }
+});
+
+// Initialize extension
+async function initializeExtension() {
+  try {
+    const storedData = await browserAPI.storage.local.get([
+      "unsafeSites",
+      "potentiallyUnsafeSites",
+      "fmhySites",
+      "safeSites",
+    ]);
+
+    if (storedData.unsafeSites) {
+      unsafeSitesRegex = generateRegexFromList(storedData.unsafeSites);
+    } else {
+      await fetchFilterLists();
+    }
+
+    if (storedData.safeSites) {
+      safeSites = storedData.safeSites;
+    } else {
+      await fetchSafeSites();
+    }
+
+    if (storedData.fmhySites) {
+      fmhySitesRegex = generateRegexFromList(storedData.fmhySites);
+    } else {
+      await fetchFilterLists();
+    }
+
+    await setupUpdateSchedule();
+    console.log("Extension initialized successfully.");
+  } catch (error) {
+    console.error("Error during extension initialization:", error);
+  }
 }
 
 // Event Listeners
@@ -345,7 +393,7 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     sendResponse({ status: status });
-    return true; // Indicates asynchronous response handling
+    return true;
   }
 });
 
@@ -353,13 +401,11 @@ async function openWarningPage(tabId, unsafeUrl) {
   const normalizedUrl = normalizeUrl(unsafeUrl);
   const tabApprovedUrls = approvedUrls.get(tabId) || [];
 
-  // Check if URL has already been approved for this tab
   if (tabApprovedUrls.includes(normalizedUrl)) {
     console.log(`URL ${unsafeUrl} was already approved for tab ${tabId}`);
     return;
   }
 
-  // Fetch the warning page setting
   const { warningPage } = await browserAPI.storage.sync.get({
     warningPage: true,
   });
@@ -369,20 +415,17 @@ async function openWarningPage(tabId, unsafeUrl) {
     return;
   }
 
-  // Redirect to the warning page if it is enabled in settings
   const warningPageUrl = browserAPI.runtime.getURL(
     `../pub/warning-page.html?url=${encodeURIComponent(unsafeUrl)}`
   );
   browserAPI.tabs.update(tabId, { url: warningPageUrl });
 }
 
-// Add listener for approval from the warning page
 browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "approveSite") {
     const { tabId, url } = message;
     const normalizedUrl = normalizeUrl(url);
 
-    // Store approval for this URL in the current tab
     if (tabId && normalizedUrl) {
       let tabApprovedUrls = approvedUrls.get(tabId) || [];
       if (!tabApprovedUrls.includes(normalizedUrl)) {
@@ -393,10 +436,9 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ status: "approved" });
     }
   }
-  return true; // Indicates asynchronous response handling
+  return true;
 });
 
-// Listen for settings updates from the settings page
 browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "settingsUpdated") {
     console.log(
@@ -404,10 +446,7 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
       message.settings
     );
 
-    // Acknowledge the message by sending a response
     sendResponse({ status: "Settings updated successfully" });
-
-    // Return true to indicate that the response will be sent asynchronously
     return true;
   }
 });
@@ -425,33 +464,9 @@ browserAPI.tabs.onActivated.addListener(async (activeInfo) => {
   }
 });
 
-browserAPI.alarms.onAlarm.addListener(async (alarm) => {
-  if (alarm.name === "checkUpdate") {
-    const needsUpdate = await shouldUpdate();
-    if (needsUpdate) {
-      await fetchFilterLists();
-    }
-  }
-});
-
 browserAPI.tabs.onRemoved.addListener((tabId) => {
   approvedUrls.delete(tabId);
   browserAPI.storage.local.remove(`proceedTab_${tabId}`);
 });
-
-// Initialize extension
-async function initializeExtension() {
-  try {
-    await Promise.all([
-      fetchFilterLists(),
-      fetchSafeSites(),
-      fetchStarredSites(),
-      setupUpdateSchedule(),
-    ]);
-    console.log("Extension initialized successfully.");
-  } catch (error) {
-    console.error("Error during extension initialization:", error);
-  }
-}
 
 initializeExtension();
