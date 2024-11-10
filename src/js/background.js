@@ -109,9 +109,7 @@ async function fetchFilterLists() {
     if (potentiallyUnsafeResponse.ok) {
       const potentiallyUnsafeText = await potentiallyUnsafeResponse.text();
       potentiallyUnsafeSites = extractUrlsFromFilterList(potentiallyUnsafeText);
-      potentiallyUnsafeSitesRegex = generateRegexFromList(
-        potentiallyUnsafeSites
-      );
+      potentiallyUnsafeSitesRegex = generateRegexFromList(potentiallyUnsafeSites);
     }
 
     if (fmhyResponse.ok) {
@@ -172,7 +170,7 @@ async function fetchStarredSites() {
   }
 }
 
-// Fetch all lists based on frequency
+// Fetch all lists if needed based on frequency
 async function fetchAllLists() {
   console.log("Fetching all lists...");
   try {
@@ -183,27 +181,20 @@ async function fetchAllLists() {
 
     const now = new Date();
     const lastFetchDate = lastFetched ? new Date(lastFetched) : null;
-    const diffHours = lastFetchDate
-      ? (now - lastFetchDate) / (1000 * 60 * 60)
-      : Infinity;
+    const diffHours = lastFetchDate ? (now - lastFetchDate) / (1000 * 60 * 60) : Infinity;
 
-    const hoursThreshold =
-      {
-        daily: 24,
-        weekly: 168,
-        monthly: 720,
-      }[updateFrequency] || 24;
+    const hoursThreshold = {
+      daily: 24,
+      weekly: 168,
+      monthly: 720,
+    }[updateFrequency] || 24;
 
     if (diffHours < hoursThreshold) {
       console.log("Update frequency threshold not met. Skipping fetch.");
       return;
     }
 
-    await Promise.all([
-      fetchFilterLists(),
-      fetchSafeSites(),
-      fetchStarredSites(),
-    ]);
+    await Promise.all([fetchFilterLists(), fetchSafeSites(), fetchStarredSites()]);
     await browserAPI.storage.local.set({ lastFetched: now.toISOString() });
     console.log("All lists fetched and lastFetched timestamp updated.");
   } catch (error) {
@@ -336,22 +327,17 @@ async function initializeExtension() {
       "safeSites",
     ]);
 
-    if (storedData.unsafeSites) {
+    // Check if any of the filter lists are missing, if so, fetch them initially
+    if (!storedData.unsafeSites || !storedData.potentiallyUnsafeSites || !storedData.fmhySites || !storedData.safeSites) {
+      console.log("Filter lists missing in storage. Performing initial fetch.");
+      await fetchAllLists();
+    } else {
+      // Load lists from storage to memory and initialize regex patterns
       unsafeSitesRegex = generateRegexFromList(storedData.unsafeSites);
-    } else {
-      await fetchFilterLists();
-    }
-
-    if (storedData.safeSites) {
-      safeSites = storedData.safeSites;
-    } else {
-      await fetchSafeSites();
-    }
-
-    if (storedData.fmhySites) {
+      potentiallyUnsafeSitesRegex = generateRegexFromList(storedData.potentiallyUnsafeSites);
       fmhySitesRegex = generateRegexFromList(storedData.fmhySites);
-    } else {
-      await fetchFilterLists();
+      safeSites = storedData.safeSites;
+      console.log("Loaded filter lists from storage.");
     }
 
     await setupUpdateSchedule();
