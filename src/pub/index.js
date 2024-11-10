@@ -7,12 +7,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const browserAPI = typeof browser !== "undefined" ? browser : chrome;
 
-  // URLs of known extension pages
   const warningPageUrl = browserAPI.runtime.getURL("pub/warning-page.html");
   const settingsPageUrl = browserAPI.runtime.getURL("pub/settings-page.html");
   const welcomePageUrl = browserAPI.runtime.getURL("pub/welcome-page.html");
 
-  // Apply theme based on settings
   async function applyTheme() {
     try {
       const { theme } = await browserAPI.storage.sync.get("theme");
@@ -40,21 +38,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const currentUrl = activeTab.url;
+    const rootUrl = extractRootUrl(currentUrl);
 
-    // Check if the URL is an extension page by checking if it starts with known extension page URLs
     if (
       currentUrl.startsWith(warningPageUrl) ||
       currentUrl === settingsPageUrl ||
       currentUrl === welcomePageUrl
     ) {
       handleStatusUpdate("extension_page", currentUrl);
-      return; // Skip further processing since it's an internal page
+      return;
     }
 
-    // Send a message to the background script to check the site's status
+    // Send both the full URL and root URL to the background for status checking
     const response = await browserAPI.runtime.sendMessage({
       action: "checkSiteStatus",
-      url: currentUrl,
+      url: currentUrl, // full path URL
+      rootUrl: rootUrl, // root domain URL
     });
 
     if (!response || !response.status) {
@@ -63,18 +62,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       );
     }
 
-    handleStatusUpdate(response.status, currentUrl);
+    // Display the appropriate URL in the popup
+    const displayUrl = response.matchedUrl || rootUrl;
+    handleStatusUpdate(response.status, displayUrl);
   } catch (error) {
     console.error("Error while checking site status:", error);
     errorMessage.textContent = `Error: ${error.message}`;
     updateUI("error", "An error occurred while retrieving the site status.");
   }
 
-  /**
-   * Updates the UI based on the site status
-   * @param {string} status - The status of the site (e.g., "safe", "unsafe")
-   * @param {string} displayUrl - The URL or root domain to display in the message
-   */
   function handleStatusUpdate(status, displayUrl) {
     let message;
 
@@ -95,7 +91,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         message = `${displayUrl} is a <strong>starred</strong> site.`;
         break;
       case "extension_page":
-        // Set specific messages for each known extension page
         if (displayUrl.startsWith(warningPageUrl)) {
           message =
             "You are on the <strong>Warning Page</strong>. This page warns you about potentially unsafe sites.";
@@ -119,11 +114,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateUI(status, message);
   }
 
-  /**
-   * Updates the UI with the appropriate icon, message, and effects.
-   * @param {string} status - The status of the site (e.g., "safe", "unsafe").
-   * @param {string} message - The message to display to the user.
-   */
   function updateUI(status, message) {
     const icons = {
       unsafe: "../res/icons/unsafe.png",
@@ -137,20 +127,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       unknown: "../res/ext_icon_144.png",
     };
 
-    // Update the icon and message
     statusIcon.src = icons[status] || icons["unknown"];
     statusMessage.innerHTML = message || "An unknown error occurred.";
 
-    // Add a small animation when the status changes
     statusIcon.classList.add("active");
     setTimeout(() => statusIcon.classList.remove("active"), 300);
 
     console.log(`UI updated: ${message}`);
   }
 
-  // Add settings button functionality
   document.getElementById("settingsButton").addEventListener("click", () => {
-    // Open the settings page in a new tab
     browserAPI.runtime.openOptionsPage();
   });
+
+  function extractRootUrl(url) {
+    try {
+      const urlObj = new URL(url);
+      return `${urlObj.protocol}//${urlObj.hostname}`;
+    } catch (error) {
+      console.warn(`Failed to extract root URL from: ${url}`);
+      return url;
+    }
+  }
 });

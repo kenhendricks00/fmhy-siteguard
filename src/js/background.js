@@ -248,29 +248,22 @@ function checkSiteAndUpdatePageAction(tabId, url) {
     return;
   }
 
-  // Check if the site is starred
-  if (starredSites.includes(rootUrl) || starredSites.includes(normalizedUrl)) {
-    updatePageAction("starred", tabId);
-    return;
+  // Check if the full URL is starred or has a specific status
+  let status = getStatusFromLists(normalizedUrl);
+  let matchedUrl = normalizedUrl;
+
+  // If no specific match for the full URL, check the root URL
+  if (status === "no_data") {
+    status = getStatusFromLists(rootUrl);
+    matchedUrl = rootUrl;
   }
 
-  // Check if the site is unsafe and not approved
-  const tabApprovedUrls = approvedUrls.get(tabId) || [];
-  const isApproved = tabApprovedUrls.includes(rootUrl);
+  // Apply the correct icon status to the tab
+  updatePageAction(status, tabId);
 
-  if (unsafeSitesRegex?.test(rootUrl) && !isApproved) {
-    updatePageAction("unsafe", tabId);
+  // Handle unsafe sites that need warning page redirection if not approved
+  if (status === "unsafe" && !approvedUrls.get(tabId)?.includes(rootUrl)) {
     openWarningPage(tabId, rootUrl);
-  } else if (unsafeSitesRegex?.test(rootUrl) && isApproved) {
-    updatePageAction("unsafe", tabId);
-  } else if (potentiallyUnsafeSitesRegex?.test(rootUrl)) {
-    updatePageAction("potentially_unsafe", tabId);
-  } else if (fmhySitesRegex?.test(rootUrl)) {
-    updatePageAction("fmhy", tabId);
-  } else if (safeSites.includes(rootUrl)) {
-    updatePageAction("safe", tabId);
-  } else {
-    updatePageAction("default", tabId);
   }
 }
 
@@ -332,38 +325,31 @@ async function setupUpdateSchedule() {
 // Event Listeners
 browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "checkSiteStatus") {
-    const normalizedUrl = normalizeUrl(message.url.trim());
-    const rootUrl = extractRootUrl(normalizedUrl);
+    const { url, rootUrl } = message;
 
-    let isUnsafe =
-      unsafeSitesRegex?.test(rootUrl) || unsafeSitesRegex?.test(normalizedUrl);
-    let isPotentiallyUnsafe =
-      potentiallyUnsafeSitesRegex?.test(rootUrl) ||
-      potentiallyUnsafeSitesRegex?.test(normalizedUrl);
-    let isFMHY =
-      fmhySitesRegex?.test(rootUrl) || fmhySitesRegex?.test(normalizedUrl);
-    let isStarred =
-      starredSites.includes(rootUrl) || starredSites.includes(normalizedUrl);
-    let isSafe =
-      safeSites.includes(rootUrl) || safeSites.includes(normalizedUrl);
+    // Attempt to match with the full URL first (for specific paths)
+    let status = getStatusFromLists(url);
+    let matchedUrl = url;
 
-    let status = "no_data";
-    if (isFMHY) {
-      status = "fmhy";
-    } else if (isStarred) {
-      status = "starred";
-    } else if (isUnsafe) {
-      status = "unsafe";
-    } else if (isPotentiallyUnsafe) {
-      status = "potentially_unsafe";
-    } else if (isSafe) {
-      status = "safe";
+    // If no specific match, try the root URL
+    if (status === "no_data") {
+      status = getStatusFromLists(rootUrl);
+      matchedUrl = rootUrl;
     }
 
-    sendResponse({ status: status });
-    return true; // Indicates asynchronous response handling
+    sendResponse({ status, matchedUrl });
+    return true;
   }
 });
+
+function getStatusFromLists(url) {
+  if (unsafeSitesRegex?.test(url)) return "unsafe";
+  if (potentiallyUnsafeSitesRegex?.test(url)) return "potentially_unsafe";
+  if (fmhySitesRegex?.test(url)) return "fmhy";
+  if (starredSites.includes(url)) return "starred";
+  if (safeSites.includes(url)) return "safe";
+  return "no_data";
+}
 
 async function openWarningPage(tabId, unsafeUrl) {
   const normalizedUrl = normalizeUrl(unsafeUrl);
