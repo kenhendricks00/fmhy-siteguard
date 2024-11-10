@@ -81,7 +81,7 @@ function extractUrlsFromFilterList(text) {
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line && !line.startsWith("!"))
-    .map((line) => normalizeUrl(line))
+    .map((line) => extractRootUrl(normalizeUrl(line))) // Normalize to root URLs only
     .filter((url) => url !== null);
 }
 
@@ -109,7 +109,9 @@ async function fetchFilterLists() {
     if (potentiallyUnsafeResponse.ok) {
       const potentiallyUnsafeText = await potentiallyUnsafeResponse.text();
       potentiallyUnsafeSites = extractUrlsFromFilterList(potentiallyUnsafeText);
-      potentiallyUnsafeSitesRegex = generateRegexFromList(potentiallyUnsafeSites);
+      potentiallyUnsafeSitesRegex = generateRegexFromList(
+        potentiallyUnsafeSites
+      );
     }
 
     if (fmhyResponse.ok) {
@@ -142,7 +144,9 @@ async function fetchSafeSites() {
     if (response.ok) {
       const markdown = await response.text();
       const urls = extractUrlsFromMarkdown(markdown);
-      safeSites = [...new Set(urls.map((url) => normalizeUrl(url.trim())))];
+      safeSites = [
+        ...new Set(urls.map((url) => extractRootUrl(normalizeUrl(url.trim())))),
+      ];
 
       await browserAPI.storage.local.set({
         safeSites,
@@ -163,14 +167,14 @@ async function fetchStarredSites() {
     if (response.ok) {
       const html = await response.text();
       const urls = extractUrlsFromBookmarks(html);
-      starredSites = [...new Set([...urls.map(normalizeUrl), ...starredSites])];
+      starredSites = [...new Set(urls.map(extractRootUrl))]; // Normalize to root URLs only
     }
   } catch (error) {
     console.error("Error fetching starred sites:", error);
   }
 }
 
-// Fetch all lists if needed based on frequency
+// Fetch all lists based on frequency
 async function fetchAllLists() {
   console.log("Fetching all lists...");
   try {
@@ -181,20 +185,27 @@ async function fetchAllLists() {
 
     const now = new Date();
     const lastFetchDate = lastFetched ? new Date(lastFetched) : null;
-    const diffHours = lastFetchDate ? (now - lastFetchDate) / (1000 * 60 * 60) : Infinity;
+    const diffHours = lastFetchDate
+      ? (now - lastFetchDate) / (1000 * 60 * 60)
+      : Infinity;
 
-    const hoursThreshold = {
-      daily: 24,
-      weekly: 168,
-      monthly: 720,
-    }[updateFrequency] || 24;
+    const hoursThreshold =
+      {
+        daily: 24,
+        weekly: 168,
+        monthly: 720,
+      }[updateFrequency] || 24;
 
     if (diffHours < hoursThreshold) {
       console.log("Update frequency threshold not met. Skipping fetch.");
       return;
     }
 
-    await Promise.all([fetchFilterLists(), fetchSafeSites(), fetchStarredSites()]);
+    await Promise.all([
+      fetchFilterLists(),
+      fetchSafeSites(),
+      fetchStarredSites(),
+    ]);
     await browserAPI.storage.local.set({ lastFetched: now.toISOString() });
     console.log("All lists fetched and lastFetched timestamp updated.");
   } catch (error) {
@@ -204,11 +215,10 @@ async function fetchAllLists() {
 
 // UI Update Functions
 function updatePageAction(status, tabId) {
+  console.log(
+    `updatePageAction: Setting icon for status "${status}" on tab ${tabId}`
+  );
   const icons = {
-    safe: {
-      19: "../res/icons/safe_19.png",
-      38: "../res/icons/safe_38.png",
-    },
     unsafe: {
       19: "../res/icons/unsafe_19.png",
       38: "../res/icons/unsafe_38.png",
@@ -217,15 +227,20 @@ function updatePageAction(status, tabId) {
       19: "../res/icons/potentially_unsafe_19.png",
       38: "../res/icons/potentially_unsafe_38.png",
     },
-    starred: {
-      19: "../res/icons/starred_19.png",
-      38: "../res/icons/starred_38.png",
-    },
     fmhy: {
       19: "../res/icons/fmhy_19.png",
       38: "../res/icons/fmhy_38.png",
     },
+    starred: {
+      19: "../res/icons/starred_19.png",
+      38: "../res/icons/starred_38.png",
+    },
+    safe: {
+      19: "../res/icons/safe_19.png",
+      38: "../res/icons/safe_38.png",
+    },
     extension_page: {
+      // Icon for internal extension pages
       19: "../res/ext_icon_144.png",
       38: "../res/ext_icon_144.png",
     },
@@ -236,7 +251,6 @@ function updatePageAction(status, tabId) {
   };
 
   const icon = icons[status] || icons["default"];
-
   browserAPI.action.setIcon({
     tabId: tabId,
     path: icon,
@@ -256,6 +270,9 @@ async function notifySettingsPage() {
 
 // Site Status Checking
 function checkSiteAndUpdatePageAction(tabId, url) {
+  console.log(
+    `checkSiteAndUpdatePageAction: Checking status for ${url} on tab ${tabId}`
+  );
   if (!url) {
     updatePageAction("default", tabId);
     return;
@@ -264,46 +281,71 @@ function checkSiteAndUpdatePageAction(tabId, url) {
   const normalizedUrl = normalizeUrl(url.trim());
   const rootUrl = extractRootUrl(normalizedUrl);
 
-  const isExtensionPage =
-    url.includes(browserAPI.runtime.getURL("pub/warning-page.html")) ||
-    url.includes(browserAPI.runtime.getURL("pub/settings-page.html")) ||
-    url.includes(browserAPI.runtime.getURL("pub/welcome-page.html"));
+  // Detect if the URL is an internal extension page
+  const warningPageUrl = browserAPI.runtime.getURL("pub/warning-page.html");
+  const settingsPageUrl = browserAPI.runtime.getURL("pub/settings-page.html");
+  const welcomePageUrl = browserAPI.runtime.getURL("pub/welcome-page.html");
 
-  if (isExtensionPage) {
-    updatePageAction("extension_page", tabId);
+  if (
+    url.startsWith(warningPageUrl) ||
+    url === settingsPageUrl ||
+    url === welcomePageUrl
+  ) {
+    updatePageAction("extension_page", tabId); // Set icon for extension-specific pages
     return;
   }
 
-  const isUnsafe =
-    unsafeSitesRegex?.test(rootUrl) || unsafeSitesRegex?.test(normalizedUrl);
-  const isPotentiallyUnsafe =
-    potentiallyUnsafeSitesRegex?.test(rootUrl) ||
-    potentiallyUnsafeSitesRegex?.test(normalizedUrl);
-  const isFMHY =
-    fmhySitesRegex?.test(rootUrl) || fmhySitesRegex?.test(normalizedUrl);
-  const isStarred =
-    starredSites.includes(rootUrl) || starredSites.includes(normalizedUrl);
-  const isSafe =
-    safeSites.includes(rootUrl) || safeSites.includes(normalizedUrl);
-
   const tabApprovedUrls = approvedUrls.get(tabId) || [];
-  const isApproved = tabApprovedUrls.includes(normalizedUrl);
+  const isApproved = tabApprovedUrls.includes(rootUrl);
 
-  if (isUnsafe && !isApproved) {
+  // Prioritize checks from most restrictive to least restrictive, with starred above safe
+  if (unsafeSitesRegex?.test(rootUrl) && !isApproved) {
+    console.log(
+      `checkSiteAndUpdatePageAction: ${rootUrl} is unsafe and not approved.`
+    );
     updatePageAction("unsafe", tabId);
-    openWarningPage(tabId, url);
-  } else if (isPotentiallyUnsafe) {
+    openWarningPage(tabId, rootUrl);
+  } else if (unsafeSitesRegex?.test(rootUrl) && isApproved) {
+    console.log(
+      `checkSiteAndUpdatePageAction: ${rootUrl} is unsafe and approved.`
+    );
+    updatePageAction("unsafe", tabId);
+  } else if (potentiallyUnsafeSitesRegex?.test(rootUrl)) {
+    console.log(
+      `checkSiteAndUpdatePageAction: ${rootUrl} is potentially unsafe.`
+    );
     updatePageAction("potentially_unsafe", tabId);
-  } else if (isFMHY) {
+  } else if (fmhySitesRegex?.test(rootUrl)) {
+    console.log(`checkSiteAndUpdatePageAction: ${rootUrl} is an FMHY site.`);
     updatePageAction("fmhy", tabId);
-  } else if (isStarred) {
+  } else if (starredSites.includes(rootUrl)) {
+    console.log(`checkSiteAndUpdatePageAction: ${rootUrl} is starred.`);
     updatePageAction("starred", tabId);
-  } else if (isSafe) {
+  } else if (safeSites.includes(rootUrl)) {
+    console.log(`checkSiteAndUpdatePageAction: ${rootUrl} is safe.`);
     updatePageAction("safe", tabId);
   } else {
+    // Set to default if none of the conditions match
+    console.log(
+      `checkSiteAndUpdatePageAction: ${rootUrl} has no matching status, setting default.`
+    );
     updatePageAction("default", tabId);
   }
 }
+
+// Ensure the correct icon is displayed in the toolbar on tab updates and activations
+browserAPI.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === "complete" && tab.url) {
+    checkSiteAndUpdatePageAction(tabId, tab.url);
+  }
+});
+
+browserAPI.tabs.onActivated.addListener(async (activeInfo) => {
+  const tab = await browserAPI.tabs.get(activeInfo.tabId);
+  if (tab.url) {
+    checkSiteAndUpdatePageAction(tab.id, tab.url);
+  }
+});
 
 // Update Schedule Management
 async function setupUpdateSchedule() {
@@ -328,13 +370,20 @@ async function initializeExtension() {
     ]);
 
     // Check if any of the filter lists are missing, if so, fetch them initially
-    if (!storedData.unsafeSites || !storedData.potentiallyUnsafeSites || !storedData.fmhySites || !storedData.safeSites) {
+    if (
+      !storedData.unsafeSites ||
+      !storedData.potentiallyUnsafeSites ||
+      !storedData.fmhySites ||
+      !storedData.safeSites
+    ) {
       console.log("Filter lists missing in storage. Performing initial fetch.");
       await fetchAllLists();
     } else {
       // Load lists from storage to memory and initialize regex patterns
       unsafeSitesRegex = generateRegexFromList(storedData.unsafeSites);
-      potentiallyUnsafeSitesRegex = generateRegexFromList(storedData.potentiallyUnsafeSites);
+      potentiallyUnsafeSitesRegex = generateRegexFromList(
+        storedData.potentiallyUnsafeSites
+      );
       fmhySitesRegex = generateRegexFromList(storedData.fmhySites);
       safeSites = storedData.safeSites;
       console.log("Loaded filter lists from storage.");
@@ -410,17 +459,27 @@ async function openWarningPage(tabId, unsafeUrl) {
 browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "approveSite") {
     const { tabId, url } = message;
-    const normalizedUrl = normalizeUrl(url);
+    const rootUrl = extractRootUrl(url);
 
-    if (tabId && normalizedUrl) {
-      let tabApprovedUrls = approvedUrls.get(tabId) || [];
-      if (!tabApprovedUrls.includes(normalizedUrl)) {
-        tabApprovedUrls.push(normalizedUrl);
-        approvedUrls.set(tabId, tabApprovedUrls);
-      }
-      console.log(`Approval stored for ${url} in tab ${tabId}`);
-      sendResponse({ status: "approved" });
+    console.log(
+      `approveSite: Received approval for ${rootUrl} on tab ${tabId}`
+    );
+
+    // Store approved URL globally for this tab
+    let tabApprovedUrls = approvedUrls.get(tabId) || [];
+    if (!tabApprovedUrls.includes(rootUrl)) {
+      tabApprovedUrls.push(rootUrl);
+      approvedUrls.set(tabId, tabApprovedUrls);
+      console.log(
+        `approveSite: ${rootUrl} marked as approved for tab ${tabId}`
+      );
     }
+
+    // Update toolbar icon to "unsafe" immediately
+    console.log(`approveSite: Setting icon to unsafe for tab ${tabId}`);
+    updatePageAction("unsafe", tabId);
+
+    sendResponse({ status: "approved" });
   }
   return true;
 });
