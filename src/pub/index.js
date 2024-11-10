@@ -51,6 +51,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       return; // Skip further processing since it's an internal page
     }
 
+    // Extract the root URL for display
+    const rootUrl = extractRootUrl(currentUrl);
+
     // Send a message to the background script to check the site's status
     const response = await browserAPI.runtime.sendMessage({
       action: "checkSiteStatus",
@@ -63,11 +66,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       );
     }
 
-    handleStatusUpdate(response.status, currentUrl);
+    handleStatusUpdate(response.status, rootUrl);
   } catch (error) {
     console.error("Error while checking site status:", error);
     errorMessage.textContent = `Error: ${error.message}`;
     updateUI("error", "An error occurred while retrieving the site status.");
+  }
+
+  /**
+   * Extracts the root URL from a full URL.
+   * @param {string} url - The full URL to extract the root from.
+   * @returns {string} - The root URL.
+   */
+  function extractRootUrl(url) {
+    try {
+      const urlObj = new URL(url);
+      return `${urlObj.protocol}//${urlObj.hostname}`;
+    } catch (error) {
+      console.warn("Failed to extract root URL:", error);
+      return url; // Fallback to full URL if extraction fails
+    }
   }
 
   /**
