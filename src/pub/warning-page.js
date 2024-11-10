@@ -27,21 +27,16 @@ document.addEventListener("DOMContentLoaded", () => {
           `Sending approveSite message for tab ${currentTab.id} and URL ${unsafeUrl}`
         );
 
-        // Approve the site and wait for confirmation from the background script
-        const response = await browserAPI.runtime.sendMessage({
+        // Send approval message to the background script
+        await browserAPI.runtime.sendMessage({
           action: "approveSite",
           tabId: currentTab.id,
           url: unsafeUrl,
         });
 
-        if (response && response.status === "approved") {
-          console.log("Approval confirmed, navigating to the unsafe URL...");
-
-          // Redirect to the approved unsafe URL
-          await browserAPI.tabs.update(currentTab.id, { url: unsafeUrl });
-        } else {
-          console.error("Approval failed or no response from background.");
-        }
+        console.log("Approval stored, navigating to the unsafe URL...");
+        // Redirect to the approved unsafe URL
+        await browserAPI.tabs.update(currentTab.id, { url: unsafeUrl });
       }
     }
   });

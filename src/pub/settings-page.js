@@ -167,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Load settings function with unified frequency
+  // Load settings function
   async function loadSettings() {
     try {
       const savedSettings = await browserAPI.storage.sync.get({
@@ -207,7 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Save settings function with unified frequency
+  // Save settings function
   async function saveSettings() {
     try {
       const settings = {
@@ -216,14 +216,27 @@ document.addEventListener("DOMContentLoaded", () => {
         updateFrequency: updateFrequency.value,
       };
 
+      console.log("Saving settings:", settings);
+
+      // Save settings to storage
       await browserAPI.storage.sync.set(settings);
       showNotification("Settings saved successfully!");
       applyTheme(settings.theme);
       await updateNextUpdateStatus();
+
+      console.log(
+        "Settings saved to storage, sending message to background script..."
+      );
+
+      // Send updated settings to background script
       await browserAPI.runtime.sendMessage({
         type: "settingsUpdated",
         settings: settings,
       });
+
+      console.log(
+        "Settings update message sent to background script successfully."
+      );
     } catch (error) {
       console.error("Error occurred during saveSettings:", error);
       showNotification("Error saving settings", true);
