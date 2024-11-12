@@ -6,7 +6,32 @@ const filterListURLUnsafe =
   "https://raw.githubusercontent.com/fmhy/FMHYFilterlist/refs/heads/main/sitelist.txt";
 const filterListURLPotentiallyUnsafe =
   "https://raw.githubusercontent.com/fmhy/FMHYFilterlist/refs/heads/main/sitelist-plus.txt";
-const safeListURL = "https://api.fmhy.net/single-page";
+const safeListURLs = [
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/adblockvpnguide.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/ai.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/android-iosguide.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/audiopiracyguide.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/devtools.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/downloadpiracyguide.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/edupiracyguide.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/file-tools.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/gaming-tools.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/gamingpiracyguide.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/img-tools.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/internet-tools.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/linuxguide.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/miscguide.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/non-english.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/nsfwpiracy.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/readingpiracyguide.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/social-media-tools.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/storage.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/system-tools.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/text-tools.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/torrentpiracyguide.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/video-tools.md",
+  "https://raw.githubusercontent.com/fmhy/edit/refs/heads/main/docs/videopiracyguide.md",
+];
 const starredListURL =
   "https://raw.githubusercontent.com/fmhy/bookmarks/refs/heads/main/fmhy_in_bookmarks_starred_only.html";
 const fmhyFilterListURL =
@@ -141,20 +166,32 @@ async function fetchFilterLists() {
 }
 
 async function fetchSafeSites() {
-  console.log("Fetching safe sites...");
+  console.log("Fetching safe sites from multiple URLs...");
   try {
-    const response = await fetch(safeListURL);
-    if (response.ok) {
-      const markdown = await response.text();
-      const urls = extractUrlsFromMarkdown(markdown);
-      safeSites = [...new Set(urls.map((url) => normalizeUrl(url.trim())))];
+    const fetchPromises = safeListURLs.map((url) => fetch(url));
+    const responses = await Promise.all(fetchPromises);
 
-      await browserAPI.storage.local.set({
-        safeSiteCount: safeSites.length,
-      });
-
-      console.log("Stored safe site count:", safeSites.length);
+    // Extract URLs from each markdown document
+    let allUrls = [];
+    for (const response of responses) {
+      if (response.ok) {
+        const markdown = await response.text();
+        const urls = extractUrlsFromMarkdown(markdown);
+        allUrls = allUrls.concat(urls);
+      } else {
+        console.warn(`Failed to fetch from ${response.url}`);
+      }
     }
+
+    // Normalize URLs and remove duplicates
+    safeSites = [...new Set(allUrls.map((url) => normalizeUrl(url.trim())))];
+
+    // Store safe site count for use in the extension's storage
+    await browserAPI.storage.local.set({
+      safeSiteCount: safeSites.length,
+    });
+
+    console.log("Stored safe site count:", safeSites.length);
   } catch (error) {
     console.error("Error fetching safe sites:", error);
   }
