@@ -4,6 +4,7 @@
 fmhy.net
 pastes.fmhy.net
 fmhy.lol
+guides.fmhy.lol
 fmhy.pages.dev
 fmhy.xyz
 
